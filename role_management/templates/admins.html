@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+    <title>Home</title>
+    <style>
+        .error {
+            color: red;
+        }
+
+        .modal-content {
+            width: 700px;
+        }
+
+        .adminbtn {
+            margin-top: 37px;
+        }
+
+        .admincount {
+            margin-top: 37px;
+
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        {% csrf_token %}
+        {% include 'header.html' %}
+    </header>
+
+    <div class="container">
+        <div class="alert alert-info" role="alert" id="info" hidden></div>
+        <div class="alert alert-success" role="alert" id="admin-success" hidden>
+        </div>
+
+
+        {% if user.is_superuser %}
+        <div class="alert alert-success" role="alert" id="success" hidden>
+            {% for message in messages %}
+            {{ message }}
+            {% endfor %}
+        </div>
+        <div class="row ">
+            <h2 class="col-md-6 admincount"><span class="glyphicon glyphicon-user"></span> Admins ({{ admins.count }})
+            </h2>
+            <div class="col-md-6" style="text-align: right;">
+                <button type="button" class="btn btn-primary text-center adminbtn" data-toggle="modal"
+                    data-target="#exampleModal">
+                    Add admin </button>
+                <br />
+            </div>
+        </div>
+
+
+        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel"></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form id="form">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <div class="modal-body">
+                                    <div class="row ">
+                                        <div class="alert alert-danger" role="alert" id="error" hidden>
+                                        </div>
+                                        <div class="alert alert-success" role="alert" id="success" hidden>
+                                        </div>
+                                        <div class="">
+                                            <!-- <h1 class="text-center jumbotron" id="title-add"> Add admin </h1> -->
+                                            <input type="hidden" name="admin_id" id="admin_id">
+                                            <div>
+                                                <label for="email">Email</label>
+                                                <input type="email" class="form-control" name="email" id="email"
+                                                    placeholder="Email" required>
+                                                <small>Ex:-abcd@gmail.com</small>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="first_name">First Name</label>
+                                                <input type="text" class="form-control" name="first_name"
+                                                    id="first_name" placeholder="First Name" required
+                                                    pattern="/^['a-zA-Z']/">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="last_name">Last Name</label>
+                                                <input type="text" class="form-control" name="last_name" id="last_name"
+                                                    placeholder="Last Name" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="username">User Name</label>
+                                                <input type="text" class="form-control" name="username" id="username"
+                                                    pattern="[A-Za-z0-9\w]{4,20}" placeholder="User Name" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="password">Password</label>
+                                                <input type="password" class="form-control" name="password"
+                                                    id="password" placeholder="password" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="confirm_password">Confirm Password</label>
+                                                <input type="password" class="form-control" name="confirm_password"
+                                                    id="confirm_password" placeholder="Confirm Password" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="address">Address</label>
+                                                <textarea type="address" class="form-control" name="address"
+                                                    id="address" placeholder="Address" required></textarea>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Gender:-</label>
+                                                <input type="radio" id="male" name="gender" value="Male" required>
+                                                <label for="male">Male</label>
+                                                <input type="radio" id="female" name="gender" value="Female" required>
+                                                <label for="female">Female</label>
+                                            </div>
+                                        </div>
+                                        <br />
+                                        <div class="modal-footer btn-save">
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <br />
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Address</th>
+                    <th>Gender</th>
+                    <th>Date and Time</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for admin in admins %}
+                <tr>
+                    <td>{{ admin.id }}</td>
+                    <td>{{ admin.username }}</td>
+                    <td>{{ admin.email }}</td>
+                    <td>{{ admin.first_name }}</td>
+                    <td>{{ admin.last_name }}</td>
+                    <td>{{ admin.address }}</td>
+                    <td>{{ admin.gender }}</td>
+                    <td>{{ admin.formatted_created_at }}</td>
+                    <td>
+                        <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal" id=""
+                            data-id="{{ admin.id }}" data-username="{{ admin.username }}" data-email="{{ admin.email }}"
+                            data-firstname="{{ admin.first_name }}" data-lastname="{{ admin.last_name }}"
+                            data-address="{{ admin.address }}" data-gender="{{ admin.gender }}">
+                            Edit <span class="glyphicon glyphicon-pencil"></span>
+                        </button>
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $('#form').validate({
+                rules: {
+                    email: {
+                        required: true
+                    },
+                    first_name: {
+                        required: true
+                    },
+                    last_name: {
+                        required: true
+                    },
+                    username: {
+                        required: true,
+                        maxlength: 15,
+                    },
+                    password: {
+                        minlength: 5,
+                    },
+                    confirm_password: {
+                        minlength: 5,
+                        equalTo: "#password"
+                    },
+                    address: {
+                        required: true
+                    },
+                    gender: {
+                        required: true
+                    },
+                },
+                messages: {
+                    email: {
+                        required: 'Enter please in Email.'
+                    },
+                    first_name: {
+                        required: 'Enter please a First Name.'
+                    },
+                    last_name: {
+                        required: 'Enter please a Last Name.'
+                    },
+                    username: {
+                        required: 'Enter please a User Name.',
+                    },
+                    password: {
+                        required: 'Enter please a Password.'
+                    },
+                    confirm_password: {
+                        required: 'Enter please a Confirm Password.'
+                    },
+                    address: {
+                        required: 'Enter please a Address.'
+                    },
+                    gender: {
+                        required: 'please choose any one Gender.'
+                    },
+                }
+            });
+            $('#submit').on('click', function (e) {
+                e.preventDefault();
+                if ($("#form").valid()) {
+                    var admin_id = $('#admin_id').val();
+                    var data = {
+                        email: $('#email').val(),
+                        first_name: $('#first_name').val(),
+                        last_name: $('#last_name').val(),
+                        username: $('#username').val(),
+                        password: $('#password').val(),
+                        confirm_password: $('#confirm_password').val(),
+                        address: $('#address').val(),
+                        gender: $('input[name="gender"]:checked').val(),
+                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+
+                    };
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '{% url "admins" %}',
+                        data: data,
+                        success: function (result) {
+                            if (result.code == 200) {
+                                $('#success').text(result.message).show();
+                                $('#form')[0].reset();
+                                $('#success').fadeToggle(3000);
+                                // location.reload();
+
+                            }
+                            else {
+                                $('#error').text(result.message).show();
+                                $('#error').fadeToggle(3000);
+                            }
+                        },
+                        error: function (error) {
+                            $('#error').text('Somethings went wrong please try after sometimes').show();
+                            $('#error').fadeToggle(3000);
+                        }
+                    });
+                }
+            });
+            $('.edit-btn').click(function () {
+                var { id, username, email, address, gender } = $(this).data();
+                var first_name = $(this).data('firstname');
+                var last_name = $(this).data('lastname');
+
+                $('#admin_id').val(id);
+                $('#username').val(username);
+                $('#email').val(email);
+                $('#first_name').val(first_name);
+                $('#last_name').val(last_name);
+                $('#address').val(address);
+                $("input[name='gender'][value='" + gender + "']").prop("checked", true);
+                $('#password').closest('.form-group').hide();
+                $('#confirm_password').closest('.form-group').hide();
+                $('#title-add').hide();
+                $('.modal-title').html(`<h1 class="text-center"> Edit Admin</h1>`);
+                $('.btn-save').html(` <button type="button" class="btn btn-secondary"
+                                                data-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary" id="edit-btn">Edit`)
+                // $('#adminModal').modal('show');
+
+                $('#edit-btn').off('click').on('click', function (e) {
+                    e.preventDefault();
+                    if ($("#form").valid()) {
+                        var admin_id = $('#admin_id').val();
+                        var data = {
+                            email: $('#email').val(),
+                            first_name: $('#first_name').val(),
+                            last_name: $('#last_name').val(),
+                            username: $('#username').val(),
+                            address: $('#address').val(),
+                            gender: $('input[name="gender"]:checked').val(),
+                            csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                        };
+
+                        $.ajax({
+                            type: 'POST',
+                            url: '/admins/',
+                            data: data,
+                            success: function (result) {
+                                if (result.code == 200) {
+                                    $('#success').text(result.message).show();
+                                    $('#form')[0].reset();
+                                    $('#success').fadeToggle(3000);
+                                } else {
+                                    // Handle other error cases
+                                    $('#error').text(result.message).show();
+                                    $('#error').fadeToggle(3000);
+                                }
+                            },
+                            error: function (error) {
+                                $('#error').text('Something went wrong. Please try again later.').show();
+                                $('#error').fadeToggle(3000);
+                            }
+                        });
+                    }
+                });
+            });
+
+
+            $('.adminbtn').click(function () {
+                $('#admin_id').val('');
+                $('#username').val('');
+                $('#email').val('');
+                $('#first_name').val('');
+                $('#last_name').val('');
+                $('#address').val('');
+                $("input[name='gender']").prop("checked", false);
+                $('#password').closest('.form-group').show();
+                $('#confirm_password').closest('.form-group').show();
+                $('#title-add').show();
+                $('.modal-title').html('<h1 class="text-center"> Add Admin </h1>');
+                $('.btn-save').html(` <button type="button" class="btn btn-secondary"
+                                                data-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary" id="submit">Save`)
+            });
+        });
+    </script>
+</body>
+
+</html>

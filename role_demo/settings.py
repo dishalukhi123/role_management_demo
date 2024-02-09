@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'role_management',
 ]
 
 MIDDLEWARE = [
@@ -69,7 +70,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'role_demo.wsgi.application'
 
+AUTH_USER_MODEL = 'role_management.users'
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    # Add any additional authentication backends here
+]
+LOGIN_URL = '/login/'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -84,7 +91,7 @@ WSGI_APPLICATION = 'role_demo.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "demo_db",
+        "NAME": "roles_management_db",
         "USER": "root",
         "PASSWORD": "password",
         "HOST": "localhost",  # Or an IP Address that your DB is hosted on

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+    <title>Home</title>
+</head>
+
+<body>
+    <header>
+        {% csrf_token %}
+        <nav class="navbar navbar-inverse justify-content-center jus">
+            <div class="container-fluid">
+
+                <div class="collapse navbar-collapse" id="myNavbar">
+                    <ul class="nav navbar-nav">
+                        <li class="active"><a style="font-weight: 900" href="/"><span
+                                    class="glyphicon glyphicon-home"></span> Home </a></li>
+                        {% if user.is_superuser %}
+                        <li><a href="/admins/">ADMINS</a></li>
+                        <!-- <li><a href="/members/">MEMBERS</a></li> -->
+                        {% endif %}
+                        <!-- <li><a href="/members/">MEMBERS</a></li>   -->
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right ">
+                        <li class="active"><a style="font-weight: 900" id="logout" href="/logout/"><span
+                                    class="glyphicon glyphicon-log-out"></span> Log Out</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+</body>
+
+</html>

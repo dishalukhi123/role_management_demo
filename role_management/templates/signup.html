@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+    <title>
+        Sign up Page
+    </title>
+    <style>
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    {% block content %}
+    <section class="container">
+        <form method="post" action="{% url 'signup' %}" id="form">
+            {% csrf_token %}
+            <div class="row ">
+                <div class="alert alert-danger" role="alert" id="error" hidden>
+                </div>
+                <div class="alert alert-success" role="alert" id="success" hidden>
+                </div>
+                <div class="">
+                    <h1 class="text-center jumbotron"> Sign Up </h1>
+                    <div>
+                        <label for="email">Email</label>
+                        <input type="email" class="form-control" name="email" id="email" placeholder="Email" required>
+                        <small>Ex:-abcd@gmail.com</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="first_name">First Name</label>
+                        <input type="text" class="form-control" name="first_name" id="first_name" placeholder="First Name"
+                            required pattern="/^['a-zA-Z']/">
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name">Last Name</label>
+                        <input type="text" class="form-control" name="last_name" id="last_name" placeholder="Last Name"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label for="username">User Name</label>
+                        <input type="text" class="form-control" name="username" id="username"
+                            pattern="[A-Za-z0-9\w]{4,20}" placeholder="User Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" class="form-control" name="password" id="password" placeholder="password"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm Password</label>
+                        <input type="password" class="form-control" name="confirm_password" id="confirm_password"
+                            placeholder="Confirm Password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <textarea type="address" class="form-control" name="address" id="address" placeholder="Address"
+                            required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Gender:-</label>
+                        <input type="radio" id="male" name="gender" value="Male" 
+                        required>
+                        <label for="male">Male</label>
+                        <input type="radio" id="female" name="gender" value="Female" 
+                        required>
+                        <label for="female">Female</label>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary" id="submit">
+                    Sign up
+                </button>
+            </div>
+            </br>
+            <p class="text-center">Already have account <a href="/login/">Login</a></p>
+        </form>
+    </section>
+    {% endblock %}
+
+</body>
+
+</html>
+<script>
+
+    $(document).ready(function () {
+        $('#form').validate({
+            rules: {
+                email: {
+                    required: true
+                },
+                first_name: {
+                    required: true
+                },
+                last_name: {
+                    required: true
+                },
+                username: {
+                    required: true,
+                    maxlength: 15,
+                },
+                password: {
+                    minlength: 5,
+                },
+                confirm_password: {
+                    minlength: 5,
+                    equalTo: "#password"
+                },
+                address: {
+                    required: true
+                },
+                gender: {
+                    required: true
+                },
+            },
+            messages: {
+                email: {
+                    required: 'Enter please in Email.'
+                },
+                first_name: {
+                    required: 'Enter please a First Name.'
+                },
+                last_name: {
+                    required: 'Enter please a Last Name.'
+                },
+                username: {
+                    required: 'Enter please a User Name.',
+                },
+                password: {
+                    required: 'Enter please a Password.'
+                },
+                confirm_password: {
+                    required: 'Enter please a Confirm Password.'
+                },
+                address: {
+                    required: 'Enter please a Address.'
+                },
+                gender: {
+                    required: 'please choose any one Gender.'
+                },
+            }
+        });
+        $('#submit').on('click', function (e) {
+            e.preventDefault();
+            if ($("#form").valid()) {
+                var data = {
+                    email: $('#email').val(),
+                    first_name: $('#first_name').val(),
+                    last_name: $('#last_name').val(),
+                    username: $('#username').val(),
+                    password: $('#password').val(),
+                    confirm_password: $('#confirm_password').val(),
+                    address: $('#address').val(),
+                    gender: $('input[name="gender"]:checked').val(),
+                    csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+
+                };
+
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "signup" %}',
+                    data: data,
+                    success: function (result) {
+                        if(result.code == 200){
+                            $('#success').text(result.message).show();
+                            $('#form')[0].reset();
+                            $('#success').fadeToggle(3000);
+                        }
+                        else{
+                            $('#error').text(result.message).show();
+                            $('#error').fadeToggle(3000);
+                        }
+                    },
+                    error: function (error) {
+                        $('#error').text('Somethings went wrong please try after sometimes').show();
+                        $('#error').fadeToggle(3000);
+                    }
+                });
+            }
+        });
+    });
+
+</script>
