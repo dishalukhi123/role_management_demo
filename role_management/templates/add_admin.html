@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Admin</title>
+</head>
+<body>
+    <h1>Add Admin</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% extends "base.html" %}
+
+
+        <button type="submit">Save Changes</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,5 @@
+.env
+my_env/
+rolemanagement/__pycache__
+__pycache__/
+*.pyc

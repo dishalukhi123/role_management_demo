@@ -169,7 +169,7 @@
                             data-id="{{ admin.id }}" data-username="{{ admin.username }}" data-email="{{ admin.email }}"
                             data-firstname="{{ admin.first_name }}" data-lastname="{{ admin.last_name }}"
                             data-address="{{ admin.address }}" data-gender="{{ admin.gender }}">
-                            Edit <span class="glyphicon glyphicon-pencil"></span>
+                             <span class="glyphicon glyphicon-pencil"></span>
                         </button>
                     </td>
 
@@ -238,7 +238,7 @@
                     },
                 }
             });
-            $('#submit').on('click', function (e) {
+            $('#form').on('click', function (e) {
                 e.preventDefault();
                 if ($("#form").valid()) {
                     var admin_id = $('#admin_id').val();
@@ -257,7 +257,7 @@
 
                     $.ajax({
                         type: 'POST',
-                        url: '{% url "admins" %}',
+                        url: '{% url "add_admin" %}',
                         data: data,
                         success: function (result) {
                             if (result.code == 200) {
@@ -281,6 +281,7 @@
             });
             $('.edit-btn').click(function () {
                 var { id, username, email, address, gender } = $(this).data();
+                var id = $(this).data('id');
                 var first_name = $(this).data('firstname');
                 var last_name = $(this).data('lastname');
 
@@ -300,42 +301,42 @@
                                             <button type="submit" class="btn btn-primary" id="edit-btn">Edit`)
                 // $('#adminModal').modal('show');
 
-                $('#edit-btn').off('click').on('click', function (e) {
-                    e.preventDefault();
-                    if ($("#form").valid()) {
-                        var admin_id = $('#admin_id').val();
-                        var data = {
-                            email: $('#email').val(),
-                            first_name: $('#first_name').val(),
-                            last_name: $('#last_name').val(),
-                            username: $('#username').val(),
-                            address: $('#address').val(),
-                            gender: $('input[name="gender"]:checked').val(),
-                            csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-                        };
+                // $('#edit-btn').off('click').on('click', function (e) {
+                //     e.preventDefault();
+                //     if ($("#form").valid()) {
+                //         var admin_id = $('#admin_id').val();
+                //         var data = {
+                //             email: $('#email').val(),
+                //             first_name: $('#first_name').val(),
+                //             last_name: $('#last_name').val(),
+                //             username: $('#username').val(),
+                //             address: $('#address').val(),
+                //             gender: $('input[name="gender"]:checked').val(),
+                //             csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                //         };
 
-                        $.ajax({
-                            type: 'POST',
-                            url: '/admins/',
-                            data: data,
-                            success: function (result) {
-                                if (result.code == 200) {
-                                    $('#success').text(result.message).show();
-                                    $('#form')[0].reset();
-                                    $('#success').fadeToggle(3000);
-                                } else {
-                                    // Handle other error cases
-                                    $('#error').text(result.message).show();
-                                    $('#error').fadeToggle(3000);
-                                }
-                            },
-                            error: function (error) {
-                                $('#error').text('Something went wrong. Please try again later.').show();
-                                $('#error').fadeToggle(3000);
-                            }
-                        });
-                    }
-                });
+                //         $.ajax({
+                //             type: 'POST',
+                //             url: '{% url "edit_admin" %}',
+                //             data: data,
+                //             success: function (result) {
+                //                 if (result.code == 200) {
+                //                     $('#success').text(result.message).show();
+                //                     $('#form')[0].reset();
+                //                     $('#success').fadeToggle(3000);
+                //                 } else {
+                //                     // Handle other error cases
+                //                     $('#error').text(result.message).show();
+                //                     $('#error').fadeToggle(3000);
+                //                 }
+                //             },
+                //             error: function (error) {
+                //                 $('#error').text('Something went wrong. Please try again later.').show();
+                //                 $('#error').fadeToggle(3000);
+                //             }
+                //         });
+                //     }
+                // });
             });
 
 
