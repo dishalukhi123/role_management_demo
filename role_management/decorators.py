@@ -3,7 +3,7 @@ from functools import wraps
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect
 from django.contrib import messages
-from .models import users
+from .models import Users
 
 # Role Constants
 ADMIN_ROLE_NAME = "ADMIN"

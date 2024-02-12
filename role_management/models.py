@@ -10,7 +10,7 @@ class Role(models.Model):
     class Meta:
         db_table = 'Role'
 
-class users(AbstractUser):
+class Users(AbstractUser):
     GENDER_CHOICES = (
         ('Male', 'Male'),
         ('Female', 'Female'),
@@ -30,7 +30,7 @@ class users(AbstractUser):
         db_table = 'users'
 
 class UsersRoles(models.Model):
-    user = models.ForeignKey(users, on_delete=models.CASCADE)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
 
     class Meta:

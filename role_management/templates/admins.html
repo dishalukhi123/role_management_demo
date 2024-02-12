@@ -80,7 +80,7 @@
                                         </div>
                                         <div class="">
                                             <!-- <h1 class="text-center jumbotron" id="title-add"> Add admin </h1> -->
-                                            <input type="hidden" name="admin_id" id="admin_id">
+                                            <input type="hidden" id="admin_id" name="admin_id">
                                             <div>
                                                 <label for="email">Email</label>
                                                 <input type="email" class="form-control" name="email" id="email"
@@ -128,6 +128,9 @@
                                         </div>
                                         <br />
                                         <div class="modal-footer btn-save">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary" id="save-btn">Save
                                             </button>
                                         </div>
                                     </div>
@@ -166,10 +169,8 @@
                     <td>{{ admin.formatted_created_at }}</td>
                     <td>
                         <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal" id=""
-                            data-id="{{ admin.id }}" data-username="{{ admin.username }}" data-email="{{ admin.email }}"
-                            data-firstname="{{ admin.first_name }}" data-lastname="{{ admin.last_name }}"
-                            data-address="{{ admin.address }}" data-gender="{{ admin.gender }}">
-                             <span class="glyphicon glyphicon-pencil"></span>
+                            data-id="{{ admin.id }}">
+                            <span class="glyphicon glyphicon-pencil"></span>
                         </button>
                     </td>
 
@@ -181,6 +182,8 @@
     </div>
 
     <script>
+
+        let admin_id = null
         $(document).ready(function () {
             $('#form').validate({
                 rules: {
@@ -241,7 +244,7 @@
             $('#form').on('click', function (e) {
                 e.preventDefault();
                 if ($("#form").valid()) {
-                    var admin_id = $('#admin_id').val();
+                    admin_id = $('#admin_id').val();
                     var data = {
                         email: $('#email').val(),
                         first_name: $('#first_name').val(),
@@ -257,15 +260,12 @@
 
                     $.ajax({
                         type: 'POST',
-                        url: '{% url "add_admin" %}',
+                        url: admin_id ? `/admins/${admin_id}` : `/addadmins/` ,
                         data: data,
                         success: function (result) {
                             if (result.code == 200) {
                                 $('#success').text(result.message).show();
-                                $('#form')[0].reset();
                                 $('#success').fadeToggle(3000);
-                                // location.reload();
-
                             }
                             else {
                                 $('#error').text(result.message).show();
@@ -278,65 +278,6 @@
                         }
                     });
                 }
-            });
-            $('.edit-btn').click(function () {
-                var { id, username, email, address, gender } = $(this).data();
-                var id = $(this).data('id');
-                var first_name = $(this).data('firstname');
-                var last_name = $(this).data('lastname');
-
-                $('#admin_id').val(id);
-                $('#username').val(username);
-                $('#email').val(email);
-                $('#first_name').val(first_name);
-                $('#last_name').val(last_name);
-                $('#address').val(address);
-                $("input[name='gender'][value='" + gender + "']").prop("checked", true);
-                $('#password').closest('.form-group').hide();
-                $('#confirm_password').closest('.form-group').hide();
-                $('#title-add').hide();
-                $('.modal-title').html(`<h1 class="text-center"> Edit Admin</h1>`);
-                $('.btn-save').html(` <button type="button" class="btn btn-secondary"
-                                                data-dismiss="modal">Close</button>
-                                            <button type="submit" class="btn btn-primary" id="edit-btn">Edit`)
-                // $('#adminModal').modal('show');
-
-                // $('#edit-btn').off('click').on('click', function (e) {
-                //     e.preventDefault();
-                //     if ($("#form").valid()) {
-                //         var admin_id = $('#admin_id').val();
-                //         var data = {
-                //             email: $('#email').val(),
-                //             first_name: $('#first_name').val(),
-                //             last_name: $('#last_name').val(),
-                //             username: $('#username').val(),
-                //             address: $('#address').val(),
-                //             gender: $('input[name="gender"]:checked').val(),
-                //             csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-                //         };
-
-                //         $.ajax({
-                //             type: 'POST',
-                //             url: '{% url "edit_admin" %}',
-                //             data: data,
-                //             success: function (result) {
-                //                 if (result.code == 200) {
-                //                     $('#success').text(result.message).show();
-                //                     $('#form')[0].reset();
-                //                     $('#success').fadeToggle(3000);
-                //                 } else {
-                //                     // Handle other error cases
-                //                     $('#error').text(result.message).show();
-                //                     $('#error').fadeToggle(3000);
-                //                 }
-                //             },
-                //             error: function (error) {
-                //                 $('#error').text('Something went wrong. Please try again later.').show();
-                //                 $('#error').fadeToggle(3000);
-                //             }
-                //         });
-                //     }
-                // });
             });
 
 
@@ -352,9 +293,32 @@
                 $('#confirm_password').closest('.form-group').show();
                 $('#title-add').show();
                 $('.modal-title').html('<h1 class="text-center"> Add Admin </h1>');
-                $('.btn-save').html(` <button type="button" class="btn btn-secondary"
-                                                data-dismiss="modal">Close</button>
-                                            <button type="submit" class="btn btn-primary" id="submit">Save`)
+            });
+    
+            $('.edit-btn').click(function () {
+                var admin_id = $(this).data('id');
+                $('#edit-btn').text('Save'); // Corrected selector and text
+                $('#password').closest('.form-group').hide();
+                $('#confirm_password').closest('.form-group').hide();
+                $('.modal-title').html('<h1 class="text-center"> Edit Admin </h1>');
+                
+
+                $.ajax({
+                    type: "GET",
+                    url: `/admins/${admin_id}`,
+                    success: function (response) {
+                        if (response.code == 200) {
+                            $('#email').val(response.data.email);
+                            $('#first_name').val(response.data.first_name);
+                            $('#last_name').val(response.data.last_name);
+                            $('#username').val(response.data.username);
+                            $('#address').val(response.data.address);
+                            $('input[name="gender"][value="' + response.data.gender + '"]').prop('checked', true);
+                            $('#admin_id').val(admin_id); 
+                            $('#exampleModal').modal('show');
+                        }
+                    },
+                });
             });
         });
     </script>
