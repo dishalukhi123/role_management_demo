@@ -1,14 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
-
+import pytz
 
 
 class Role(models.Model):
     role_name = models.CharField(max_length=20)
 
     class Meta:
-        db_table = 'Role'
+        db_table = 'role'
 
 class Users(AbstractUser):
     GENDER_CHOICES = (
@@ -24,7 +24,9 @@ class Users(AbstractUser):
 
 
     def formatted_created_at(self):
-        return self.created_at.strftime("%I:%M %p %A, %b %d, %Y")
+        local_timezone = pytz.timezone('Asia/Kolkata')
+        local_created_at = self.created_at.astimezone(local_timezone)
+        return local_created_at.strftime("%I:%M %p %A, %b %d, %Y")
 
     class Meta:
         db_table = 'users'

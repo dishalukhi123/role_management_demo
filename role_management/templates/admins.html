@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-
+    
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -47,6 +47,7 @@
             {{ message }}
             {% endfor %}
         </div>
+
         <div class="row ">
             <h2 class="col-md-6 admincount"><span class="glyphicon glyphicon-user"></span> Admins ({{ admins.count }})
             </h2>
@@ -57,7 +58,6 @@
                 <br />
             </div>
         </div>
-
 
         <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
             aria-hidden="true">
@@ -79,7 +79,6 @@
                                         <div class="alert alert-success" role="alert" id="success" hidden>
                                         </div>
                                         <div class="">
-                                            <!-- <h1 class="text-center jumbotron" id="title-add"> Add admin </h1> -->
                                             <input type="hidden" id="admin_id" name="admin_id">
                                             <div>
                                                 <label for="email">Email</label>
@@ -90,8 +89,7 @@
                                             <div class="form-group">
                                                 <label for="first_name">First Name</label>
                                                 <input type="text" class="form-control" name="first_name"
-                                                    id="first_name" placeholder="First Name" required
-                                                    pattern="/^['a-zA-Z']/">
+                                                    id="first_name" placeholder="First Name" required>
                                             </div>
                                             <div class="form-group">
                                                 <label for="last_name">Last Name</label>
@@ -118,13 +116,14 @@
                                                 <textarea type="address" class="form-control" name="address"
                                                     id="address" placeholder="Address" required></textarea>
                                             </div>
-                                            <div class="form-group">
+                                            <div class="form-group" >
                                                 <label>Gender:-</label>
                                                 <input type="radio" id="male" name="gender" value="Male" required>
                                                 <label for="male">Male</label>
                                                 <input type="radio" id="female" name="gender" value="Female" required>
                                                 <label for="female">Female</label>
                                             </div>
+                                            <label class="error" for="gender" hidden>Please choose any one Gender.</label>
                                         </div>
                                         <br />
                                         <div class="modal-footer btn-save">
@@ -168,7 +167,7 @@
                     <td>{{ admin.gender }}</td>
                     <td>{{ admin.formatted_created_at }}</td>
                     <td>
-                        <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal" id=""
+                        <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
                             data-id="{{ admin.id }}">
                             <span class="glyphicon glyphicon-pencil"></span>
                         </button>
@@ -184,7 +183,9 @@
     <script>
 
         let admin_id = null
+
         $(document).ready(function () {
+
             $('#form').validate({
                 rules: {
                     email: {
@@ -241,7 +242,8 @@
                     },
                 }
             });
-            $('#form').on('click', function (e) {
+
+            $('#save-btn').on('click', function (e) {
                 e.preventDefault();
                 if ($("#form").valid()) {
                     admin_id = $('#admin_id').val();
@@ -260,12 +262,15 @@
 
                     $.ajax({
                         type: 'POST',
-                        url: admin_id ? `/admins/${admin_id}` : `/addadmins/` ,
+                        url: admin_id ? `/admins/${admin_id}` : `/admins/add`,
                         data: data,
                         success: function (result) {
                             if (result.code == 200) {
                                 $('#success').text(result.message).show();
                                 $('#success').fadeToggle(3000);
+                                console.log('=====model=====')
+                                $('#exampleModal').modal('toggle'); ;
+                                $('.modal-backdrop').remove();
                             }
                             else {
                                 $('#error').text(result.message).show();
@@ -280,7 +285,6 @@
                 }
             });
 
-
             $('.adminbtn').click(function () {
                 $('#admin_id').val('');
                 $('#username').val('');
@@ -292,16 +296,15 @@
                 $('#password').closest('.form-group').show();
                 $('#confirm_password').closest('.form-group').show();
                 $('#title-add').show();
-                $('.modal-title').html('<h1 class="text-center"> Add Admin </h1>');
+                $('.modal-title').html(`<h1 class="text-center"> Add Admin </h1>`);
             });
-    
+
             $('.edit-btn').click(function () {
                 var admin_id = $(this).data('id');
-                $('#edit-btn').text('Save'); // Corrected selector and text
                 $('#password').closest('.form-group').hide();
                 $('#confirm_password').closest('.form-group').hide();
-                $('.modal-title').html('<h1 class="text-center"> Edit Admin </h1>');
-                
+                $('.modal-title').html(`<h1 class="text-center"> Edit Admin </h1>`);
+
 
                 $.ajax({
                     type: "GET",
@@ -314,8 +317,7 @@
                             $('#username').val(response.data.username);
                             $('#address').val(response.data.address);
                             $('input[name="gender"][value="' + response.data.gender + '"]').prop('checked', true);
-                            $('#admin_id').val(admin_id); 
-                            $('#exampleModal').modal('show');
+                            $('#admin_id').val(admin_id);
                         }
                     },
                 });

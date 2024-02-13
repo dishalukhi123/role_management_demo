@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate
 from role_management.models import Users, Role, UsersRoles
 from django.views import View
@@ -8,9 +8,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.contrib import messages
-from django.contrib.auth.views import LoginView
 from .decorators import admin_required, member_required
-from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 
 
@@ -19,7 +17,7 @@ def is_superuser(user):
     return result
 
 
-class addAdminView(View):
+class AddManageView(View):
     def get(self, request):
         return render(request, "admins.html")
 
@@ -35,9 +33,9 @@ class addAdminView(View):
 
         if " " in username:
             return sendResponse(500, "Username cannot use space")
-        elif " " in first_name:
-            return sendResponse(500, "First Name cannot use space")
-        elif not first_name.isalpha():
+        elif " " in first_name or " " in last_name:
+                return sendResponse(500, " Name cannot use space")
+        elif not first_name.isalpha() or not last_name.isalpha():
             return sendResponse(500, "You can only use alphabet in first name")
         elif password != confirm_password:
             return sendResponse(500, "Password does not match")
@@ -65,7 +63,7 @@ class addAdminView(View):
             return sendResponse(400, f"Error: {str(e)}")
 
 
-class adminView(View):
+class AdminView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(admin_required)
     def get(self, request):
@@ -80,12 +78,8 @@ class adminView(View):
         return render(request, "admins.html", {"admins": admins})
 
 
-
-
-
-class editAdminView(View):
+class EditAdminView(View):
     def get(self, request, admin_id):
-        print('===admin_id====',admin_id)
         users_list = Users.objects.get(id=admin_id)
         return sendResponse(code= 200,
            message= 'success',
@@ -104,19 +98,26 @@ class editAdminView(View):
         try:
             user = Users.objects.get(id=admin_id)
             data = request.POST
+            user.email = data.get('email')
             user.first_name = data.get('first_name')
             user.last_name = data.get('last_name')
             user.username = data.get('username')
             user.address = data.get('address')
             user.gender = data.get('gender')
-            user.email = data.get('email')
 
-            users_list_email = Users.objects.filter(email=user.email).exclude(id=admin_id)
-            users_list_username = Users.objects.filter(username=user.username).exclude(id=admin_id)
-
-            if users_list_email.exists():
+            if " " in user.username:
+                return sendResponse(500, "Username cannot use space")
+            elif " " in user.first_name or " " in user.last_name:
+                return sendResponse(500, " Name cannot use space")
+            elif not user.first_name.isalpha() or not user.last_name.isalpha():
+                return sendResponse(500, "You can only use alphabet in name")
+           
+            users_list_email = Users.objects.filter(email=user.email).exclude(id=admin_id).exists()
+            users_list_username = Users.objects.filter(username=user.username).exclude(id=admin_id).exists()
+            
+            if users_list_email:
                 return sendResponse(400, "Email address already exists.")
-            elif users_list_username.exists():
+            elif users_list_username:
                 return sendResponse(400, "Username already exists.")
 
 
@@ -126,8 +127,7 @@ class editAdminView(View):
             return sendResponse(404, 'Admin not found')
 
 
-
-class memberView(View):
+class MemberView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(member_required)
     def get(self, request):
@@ -148,13 +148,13 @@ class memberView(View):
         )
 
 
-class logoutView(View):
+class LogoutView(View):
     def get(self, request):
         logout(request)
         return redirect("login")
 
 
-class loginView(View):
+class LoginView(View):
     def get(self, request):
         if request.user.is_authenticated:
             return redirect("base")
@@ -190,7 +190,7 @@ class loginView(View):
             return sendResponse(500, "Incorrect username or password.")
 
 
-class homeView(View):
+class HomeView(View):
     @method_decorator(login_required(login_url="login"))
     def get(self, request):
         user_first_name = request.session.get("user_first_name")
@@ -201,7 +201,7 @@ class homeView(View):
         )
 
 
-class signupView(View):
+class SignupView(View):
     def get(self, request):
         return render(request, "signup.html", {})
 
