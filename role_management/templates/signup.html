@@ -1,6 +1,7 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
+{% block content %}
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,7 +20,6 @@
 </head>
 
 <body>
-    {% block content %}
     <section class="container">
         <form method="post" action="{% url 'signup' %}" id="form">
             {% csrf_token %}
@@ -85,11 +85,9 @@
             <p class="text-center">Already have account <a href="/login/">Login</a></p>
         </form>
     </section>
-    {% endblock %}
 
 </body>
 
-</html>
 <script>
 
     $(document).ready(function () {
@@ -190,3 +188,5 @@
     });
 
 </script>
+{% endblock content %}
+</html>

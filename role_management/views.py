@@ -12,15 +12,12 @@ from .decorators import admin_required, member_required
 from django.utils import timezone
 
 
-def is_superuser(user):
+def is_superuser (user):
     result = user.roles.filter(role_name="SUPER_ADMIN").exists()
     return result
 
 
 class AddManageView(View):
-    def get(self, request):
-        return render(request, "admins.html")
-
     def post(self, request):
         email = request.POST.get("email")
         first_name = request.POST.get("first_name")
@@ -30,21 +27,23 @@ class AddManageView(View):
         confirm_password = request.POST.get("confirm_password")
         address = request.POST.get("address")
         gender = request.POST.get("gender")
+        admin_id = request.POST.get("admin_id")
+        member_id = request.POST.get("member_id")
+
 
         if " " in username:
             return sendResponse(500, "Username cannot use space")
         elif " " in first_name or " " in last_name:
-                return sendResponse(500, " Name cannot use space")
+            return sendResponse(500, "Name cannot use space")
         elif not first_name.isalpha() or not last_name.isalpha():
-            return sendResponse(500, "You can only use alphabet in first name")
+            return sendResponse(500, "You can only use alphabets in the first name")
         elif password != confirm_password:
             return sendResponse(500, "Password does not match")
-
         current_user = request.user
         try:
             hashed_password = make_password(password)
-
-            admin_user = Users.objects.create(
+            parent_id = admin_id if admin_id is not None else member_id
+            new_user = Users.objects.create(
                 email=email,
                 first_name=first_name,
                 last_name=last_name,
@@ -52,15 +51,80 @@ class AddManageView(View):
                 password=hashed_password,
                 address=address,
                 gender=gender,
-                parent_id=current_user.id,
+                parent_id=parent_id,
                 created_at=timezone.now(),
             )
-            admin_role = Role.objects.get(role_name="ADMIN")
-            admin_user.roles.add(admin_role)
-            messages.success(request, "Admin added successfully.")
-            return sendResponse(200, "Admin added successfully.")
+
+            if admin_id:
+                admin_role = Role.objects.get(role_name="ADMIN")
+                new_user.roles.add(admin_role)
+                messages.success(request, "Admin added successfully.")
+            else:
+                member_role = Role.objects.get(role_name="MEMBER")
+                new_user.roles.add(member_role)
+                messages.success(request, "Member added successfully.")
+
+            if admin_id:
+                messages.success(request, "Admin added successfully.")
+            else:
+                messages.success(request, "Member added successfully.")
+                
+            return sendResponse(code=200, message="User added successfully.")
+
         except Exception as e:
             return sendResponse(400, f"Error: {str(e)}")
+        
+
+# class AddMemberView(View):
+#     def get(self, request):
+#         return render(request, "admins.html")
+    
+
+#     def post(self, request):
+#         email = request.POST.get("email")
+#         first_name = request.POST.get("first_name")
+#         last_name = request.POST.get("last_name")
+#         username = request.POST.get("username")
+#         password = request.POST.get("password")
+#         confirm_password = request.POST.get("confirm_password")
+#         address = request.POST.get("address")
+#         gender = request.POST.get("gender")
+#         admin_id = request.POST.get("admin_id")
+
+
+#         if " " in username:
+#             return sendResponse(500, "Username cannot use space")
+#         elif " " in first_name or " " in last_name:
+#                 return sendResponse(500, " Name cannot use space")
+#         elif not first_name.isalpha() or not last_name.isalpha():
+#             return sendResponse(500, "You can only use alphabet in first name")
+#         elif password != confirm_password:
+#             return sendResponse(500, "Password does not match")
+
+#         current_user = request.user
+#         try:
+#             hashed_password = make_password(password)
+
+#             new_user = Users.objects.create(
+#                 email=email,
+#                 first_name=first_name,
+#                 last_name=last_name,
+#                 username=username,
+#                 password=hashed_password,
+#                 address=address,
+#                 gender=gender,
+#                 parent_id=admin_id,
+#                 created_at=timezone.now(),
+#             )
+
+#             member_role = Role.objects.get(role_name="MEMBER")
+#             new_user.roles.add(member_role)
+
+#             messages.success(request, "Admin added successfully.")
+#             return sendResponse(code=200, message="Admin added successfully.")
+
+#         except Exception as e:
+#             return sendResponse(400, f"Error: {str(e)}")
 
 
 class AdminView(View):
@@ -72,7 +136,7 @@ class AdminView(View):
             admins = Users.objects.filter(roles__role_name="ADMIN").order_by("-id")
         else:
             admins = Users.objects.filter(
-                parent_id=current_user.id, roles__role_name="ADMIN"
+                parent_id = current_user.id, roles__role_name="ADMIN"
             ).order_by("-id")
 
         return render(request, "admins.html", {"admins": admins})
@@ -82,8 +146,8 @@ class EditAdminView(View):
     def get(self, request, admin_id):
         users_list = Users.objects.get(id=admin_id)
         return sendResponse(code= 200,
-           message= 'success',
-           data= {
+           message = 'success',
+           data = {
                
                 'success': True,
                 "email": users_list.email,
@@ -104,6 +168,7 @@ class EditAdminView(View):
             user.username = data.get('username')
             user.address = data.get('address')
             user.gender = data.get('gender')
+            user.created_at = timezone.now() 
 
             if " " in user.username:
                 return sendResponse(500, "Username cannot use space")
@@ -122,7 +187,17 @@ class EditAdminView(View):
 
 
             user.save()
-            return sendResponse(200,'Admin updated successfully.')
+            print('-------------------',admin_id)
+            return sendResponse(200, 'Admin updated successfully.', data={
+                'admin_id':admin_id,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "username": user.username,
+                "address": user.address,
+                "gender": user.gender,
+                "created_at": user.created_at,
+            })        
         except Users.DoesNotExist:
             return sendResponse(404, 'Admin not found')
 
@@ -196,7 +271,7 @@ class HomeView(View):
         user_first_name = request.session.get("user_first_name")
         return render(
             request,
-            "base.html",
+            "index.html",
             {"user_first_name": user_first_name},
         )
 
@@ -228,13 +303,13 @@ class SignupView(View):
             hashed_password = make_password(password)
 
             user = Users.objects.create(
-                email=email,
-                first_name=first_name,
-                last_name=last_name,
-                username=username,
-                password=hashed_password,
-                address=address,
-                gender=gender,
+                email = email,
+                first_name = first_name,
+                last_name = last_name,
+                username = username,
+                password = hashed_password,
+                address = address,
+                gender = gender,
             )
             return sendResponse(200, "User registration successfully.")
         except Exception as e:

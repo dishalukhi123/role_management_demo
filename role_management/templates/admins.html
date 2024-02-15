@@ -1,24 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-    
+{% extends "base.html" %}
+
+{% block content %}
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
     <title>Home</title>
     <style>
         .error {
             color: red;
         }
 
-        .modal-content {
-            width: 700px;
-        }
-
-        .adminbtn {
+        .add-btn {
             margin-top: 37px;
         }
 
@@ -32,7 +23,6 @@
 <body>
     <header>
         {% csrf_token %}
-        {% include 'header.html' %}
     </header>
 
     <div class="container">
@@ -52,7 +42,7 @@
             <h2 class="col-md-6 admincount"><span class="glyphicon glyphicon-user"></span> Admins ({{ admins.count }})
             </h2>
             <div class="col-md-6" style="text-align: right;">
-                <button type="button" class="btn btn-primary text-center adminbtn" data-toggle="modal"
+                <button type="button" class="btn btn-primary text-center add-btn" data-toggle="modal"
                     data-target="#exampleModal">
                     Add admin </button>
                 <br />
@@ -116,14 +106,15 @@
                                                 <textarea type="address" class="form-control" name="address"
                                                     id="address" placeholder="Address" required></textarea>
                                             </div>
-                                            <div class="form-group" >
+                                            <div class="form-group">
                                                 <label>Gender:-</label>
                                                 <input type="radio" id="male" name="gender" value="Male" required>
                                                 <label for="male">Male</label>
                                                 <input type="radio" id="female" name="gender" value="Female" required>
                                                 <label for="female">Female</label>
                                             </div>
-                                            <label class="error" for="gender" hidden>Please choose any one Gender.</label>
+                                            <label class="error" for="gender" hidden>Please choose any one
+                                                Gender.</label>
                                         </div>
                                         <br />
                                         <div class="modal-footer btn-save">
@@ -153,11 +144,12 @@
                     <th>Gender</th>
                     <th>Date and Time</th>
                     <th>Action</th>
+                    <th>Add Member</th>
                 </tr>
             </thead>
             <tbody>
                 {% for admin in admins %}
-                <tr>
+                <tr id="tabel-set" data-row-id="{{admin.id }}">
                     <td>{{ admin.id }}</td>
                     <td>{{ admin.username }}</td>
                     <td>{{ admin.email }}</td>
@@ -172,6 +164,11 @@
                             <span class="glyphicon glyphicon-pencil"></span>
                         </button>
                     </td>
+                    <td>
+                        <button class="btn btn-primary  add-member-btn" data-toggle="modal" data-target="#exampleModal"
+                            data-id="{{members.id}}">Member
+                        </button>
+                    </td>
 
                 </tr>
                 {% endfor %}
@@ -183,6 +180,28 @@
     <script>
 
         let admin_id = null
+
+
+        // function formatDateTime(dateTimeString) {
+        //     const options = {
+        //         hour: '2-digit',
+        //         minute: '2-digit',
+        //         hour12: true,
+        //         weekday: 'long',
+        //         year: 'numeric',
+        //         month: 'short',
+        //         day: '2-digit'
+        //     };
+        //     const dateTime = new Date(dateTimeString);
+        //     return dateTime.toLocaleString('en-US', options);
+        // }
+
+        // // Example usage:
+        // const dateTimeString = "2024-02-14T17:30:00"; // Your date and time string
+        // const formattedDateTime = formatDateTime(dateTimeString);
+        // console.log(formattedDateTime); // Output: "05:30 PM Wednesday, Feb 14, 2024"
+
+
 
         $(document).ready(function () {
 
@@ -257,7 +276,6 @@
                         address: $('#address').val(),
                         gender: $('input[name="gender"]:checked').val(),
                         csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-
                     };
 
                     $.ajax({
@@ -266,26 +284,56 @@
                         data: data,
                         success: function (result) {
                             if (result.code == 200) {
+                                let new_row = `
+                                <tr id="tabel-set" data-row-id="${result.data.admin_id}">
+                                    <td>${result.data.admin_id}</td>
+                                        <td>${result.data.username || ''}</td>
+                                        <td>${result.data.email || ''}</td>
+                                        <td>${result.data.first_name || ''}</td>
+                                        <td>${result.data.last_name || ''}</td>
+                                        <td>${result.data.address || ''}</td>
+                                        <td>${result.data.gender || ''}</td>
+                                        <td>${result.data.created_at || ''}</td>                                       
+                                        <td>
+                                            <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
+                                                data-id="{{ admin.id }}">
+                                                <span class="glyphicon glyphicon-pencil"></span>
+                                            </button>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-primary  add-member-btn" data-toggle="modal" data-target="#exampleModal">Member
+                                            </button>
+                                        </td>
+
+
+                                    </tr>
+                                `
+
                                 $('#success').text(result.message).show();
                                 $('#success').fadeToggle(3000);
-                                console.log('=====model=====')
-                                $('#exampleModal').modal('toggle'); ;
+                                $('#exampleModal').modal('hide');
                                 $('.modal-backdrop').remove();
-                            }
-                            else {
+
+                                if (admin_id) {
+                                    $(`#tabel-set[data-row-id="${admin_id}"]`).replaceWith(new_row)
+
+
+                                }
+                            } else {
                                 $('#error').text(result.message).show();
                                 $('#error').fadeToggle(3000);
                             }
                         },
                         error: function (error) {
-                            $('#error').text('Somethings went wrong please try after sometimes').show();
+                            $('#error').text('Something went wrong. Please try again later.').show();
                             $('#error').fadeToggle(3000);
                         }
                     });
                 }
             });
 
-            $('.adminbtn').click(function () {
+
+            $('.add-btn').click(function () {
                 $('#admin_id').val('');
                 $('#username').val('');
                 $('#email').val('');
@@ -297,6 +345,7 @@
                 $('#confirm_password').closest('.form-group').show();
                 $('#title-add').show();
                 $('.modal-title').html(`<h1 class="text-center"> Add Admin </h1>`);
+                $('#exampleModal').toggle('show');
             });
 
             $('.edit-btn').click(function () {
@@ -305,25 +354,42 @@
                 $('#confirm_password').closest('.form-group').hide();
                 $('.modal-title').html(`<h1 class="text-center"> Edit Admin </h1>`);
 
-
+                $('#form').validate().resetForm();
                 $.ajax({
                     type: "GET",
                     url: `/admins/${admin_id}`,
-                    success: function (response) {
-                        if (response.code == 200) {
-                            $('#email').val(response.data.email);
-                            $('#first_name').val(response.data.first_name);
-                            $('#last_name').val(response.data.last_name);
-                            $('#username').val(response.data.username);
-                            $('#address').val(response.data.address);
-                            $('input[name="gender"][value="' + response.data.gender + '"]').prop('checked', true);
+                    success: function (result) {
+                        if (result.code == 200) {
+                            $('#email').val(result.data.email);
+                            $('#first_name').val(result.data.first_name);
+                            $('#last_name').val(result.data.last_name);
+                            $('#username').val(result.data.username);
+                            $('#address').val(result.data.address);
+                            $('input[name="gender"][value="' + result.data.gender + '"]').prop('checked', true);
                             $('#admin_id').val(admin_id);
+                            $('#exampleModal').toggle('show');
                         }
                     },
                 });
             });
+            $('.add-member-btn').click(function () {
+                $('#admin_id').val('');
+                $('#username').val('');
+                $('#email').val('');
+                $('#first_name').val('');
+                $('#last_name').val('');
+                $('#address').val('');
+                $("input[name='gender']").prop("checked", false);
+                $('#password').closest('.form-group').show();
+                $('#confirm_password').closest('.form-group').show();
+                $('#title-add').show();
+                $('.modal-title').html(`<h1 class="text-center"> Add members </h1>`);
+                $('#exampleModal').toggle('show');
+                var members_id = $(this).data('id');
+                console.log("Member ID:", members_id);
+
+            });
         });
     </script>
 </body>
-
-</html>
+{% endblock content %}

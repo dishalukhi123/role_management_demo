@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<body>
+    <header>
+        <div class="container">
+            <div class="alert alert-info" role="alert" id="info" hidden></div>
+            <div class="row">
+                <h1><span class="glyphicon glyphicon-user"></span> Welcome {{ user_first_name }}</h1>
+            </div>
+        </div>
+    </header>
+</body>
+
+<script>
+    $(document).ready(function () {
+        var userFirstName = "{{ user_first_name }}";
+        $('#info').text('Welcome ' + userFirstName).show();
+        $('#info').fadeToggle(3000);
+    });
+</script>
+
+{% endblock content %}
