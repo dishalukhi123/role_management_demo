@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Admin</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Not adding any members</h1>
+        <div class="alert alert-info" role="alert" id="info" hidden></div>
+        {% if user.is_superuser or current_user%}
+        <h2>Members ({{ members.count }})</h2>
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Address</th>
+              <th>Gender</th>
+              <th>parent_id</th>
+              <th>Date and Time</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for member in members %}
+            <tr>
+              <td>{{ member.id }}</td>
+              <td>{{ member.username }}</td>
+              <td>{{ member.email }}</td>
+              <td>{{ member.first_name }}</td>
+              <td>{{ member.last_name }}</td>
+              <td>{{ member.address }}</td>
+              <td>{{ member.get_gender_display }}</td>
+              <td>{{ member.parent_username }}</td>
+              <td>{{ member.formatted_created_at }}</td>
+              <td>
+                <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
+                data-id="{{ member.id }}">
+                    <span class="glyphicon glyphicon-pencil"></span>
+                </button>
+            </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+      </div>
+</body>
+{% endblock content %}

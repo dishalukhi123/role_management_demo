@@ -48,89 +48,7 @@
                 <br />
             </div>
         </div>
-
-        <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel"></h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <form id="form">
-                        <div class="modal-body">
-                            <div class="form-group">
-                                <div class="modal-body">
-                                    <div class="row ">
-                                        <div class="alert alert-danger" role="alert" id="error" hidden>
-                                        </div>
-                                        <div class="alert alert-success" role="alert" id="success" hidden>
-                                        </div>
-                                        <div class="">
-                                            <input type="hidden" id="admin_id" name="admin_id">
-                                            <div>
-                                                <label for="email">Email</label>
-                                                <input type="email" class="form-control" name="email" id="email"
-                                                    placeholder="Email" required>
-                                                <small>Ex:-abcd@gmail.com</small>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="first_name">First Name</label>
-                                                <input type="text" class="form-control" name="first_name"
-                                                    id="first_name" placeholder="First Name" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="last_name">Last Name</label>
-                                                <input type="text" class="form-control" name="last_name" id="last_name"
-                                                    placeholder="Last Name" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="username">User Name</label>
-                                                <input type="text" class="form-control" name="username" id="username"
-                                                    pattern="[A-Za-z0-9\w]{4,20}" placeholder="User Name" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="password">Password</label>
-                                                <input type="password" class="form-control" name="password"
-                                                    id="password" placeholder="password" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="confirm_password">Confirm Password</label>
-                                                <input type="password" class="form-control" name="confirm_password"
-                                                    id="confirm_password" placeholder="Confirm Password" required>
-                                            </div>
-                                            <div class="form-group">
-                                                <label for="address">Address</label>
-                                                <textarea type="address" class="form-control" name="address"
-                                                    id="address" placeholder="Address" required></textarea>
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Gender:-</label>
-                                                <input type="radio" id="male" name="gender" value="Male" required>
-                                                <label for="male">Male</label>
-                                                <input type="radio" id="female" name="gender" value="Female" required>
-                                                <label for="female">Female</label>
-                                            </div>
-                                            <label class="error" for="gender" hidden>Please choose any one
-                                                Gender.</label>
-                                        </div>
-                                        <br />
-                                        <div class="modal-footer btn-save">
-                                            <button type="button" class="btn btn-secondary"
-                                                data-dismiss="modal">Close</button>
-                                            <button type="submit" class="btn btn-primary" id="save-btn">Save
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+        {% include 'modal_form.html' %}
         <br />
         <table class="table table-bordered table-striped">
             <thead>
@@ -149,7 +67,7 @@
             </thead>
             <tbody>
                 {% for admin in admins %}
-                <tr id="tabel-set" data-row-id="{{admin.id }}">
+                <tr id="tabel-set" data-row-id="{{ admin.id }}">
                     <td>{{ admin.id }}</td>
                     <td>{{ admin.username }}</td>
                     <td>{{ admin.email }}</td>
@@ -165,8 +83,7 @@
                         </button>
                     </td>
                     <td>
-                        <button class="btn btn-primary  add-member-btn" data-toggle="modal" data-target="#exampleModal"
-                            data-id="{{members.id}}">Member
+                        <button class="btn btn-primary  add-member-btn" data-id="{{admin.id}}">Member
                         </button>
                     </td>
 
@@ -180,28 +97,6 @@
     <script>
 
         let admin_id = null
-
-
-        // function formatDateTime(dateTimeString) {
-        //     const options = {
-        //         hour: '2-digit',
-        //         minute: '2-digit',
-        //         hour12: true,
-        //         weekday: 'long',
-        //         year: 'numeric',
-        //         month: 'short',
-        //         day: '2-digit'
-        //     };
-        //     const dateTime = new Date(dateTimeString);
-        //     return dateTime.toLocaleString('en-US', options);
-        // }
-
-        // // Example usage:
-        // const dateTimeString = "2024-02-14T17:30:00"; // Your date and time string
-        // const formattedDateTime = formatDateTime(dateTimeString);
-        // console.log(formattedDateTime); // Output: "05:30 PM Wednesday, Feb 14, 2024"
-
-
 
         $(document).ready(function () {
 
@@ -285,29 +180,26 @@
                         success: function (result) {
                             if (result.code == 200) {
                                 let new_row = `
-                                <tr id="tabel-set" data-row-id="${result.data.admin_id}">
-                                    <td>${result.data.admin_id}</td>
-                                        <td>${result.data.username || ''}</td>
-                                        <td>${result.data.email || ''}</td>
-                                        <td>${result.data.first_name || ''}</td>
-                                        <td>${result.data.last_name || ''}</td>
-                                        <td>${result.data.address || ''}</td>
-                                        <td>${result.data.gender || ''}</td>
-                                        <td>${result.data.created_at || ''}</td>                                       
-                                        <td>
-                                            <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
-                                                data-id="{{ admin.id }}">
-                                                <span class="glyphicon glyphicon-pencil"></span>
-                                            </button>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-primary  add-member-btn" data-toggle="modal" data-target="#exampleModal">Member
-                                            </button>
-                                        </td>
-
-
-                                    </tr>
-                                `
+                                                    <tr id="tabel-set" data-row-id="${result.data.admin_id}">
+                                                        <td>${result.data.admin_id}</td>
+                                                        <td>${result.data.username || ''}</td>
+                                                        <td>${result.data.email || ''}</td>
+                                                        <td>${result.data.first_name || ''}</td>
+                                                        <td>${result.data.last_name || ''}</td>
+                                                        <td>${result.data.address || ''}</td>
+                                                        <td>${result.data.gender || ''}</td>
+                                                        <td>${result.data.created_at || ''}</td>                                       
+                                                        <td>
+                                                            <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
+                                                                data-id="{{ admin.id }}">
+                                                                <span class="glyphicon glyphicon-pencil"></span>
+                                                            </button>
+                                                        </td>
+                                                        <td>
+                                                            <button class="btn btn-primary  add-member-btn" data-toggle="modal" data-target="#exampleModal" date-id="${result.data.admin_id}">Member
+                                                            </button>
+                                                        </td>
+                                                    </tr>`;
 
                                 $('#success').text(result.message).show();
                                 $('#success').fadeToggle(3000);
@@ -315,9 +207,7 @@
                                 $('.modal-backdrop').remove();
 
                                 if (admin_id) {
-                                    $(`#tabel-set[data-row-id="${admin_id}"]`).replaceWith(new_row)
-
-
+                                    $(`#tabel-set[data-row-id="${admin_id}"]`).replaceWith(new_row);
                                 }
                             } else {
                                 $('#error').text(result.message).show();
@@ -325,6 +215,7 @@
                             }
                         },
                         error: function (error) {
+                            console.log('Ajax request failed with error:', error);
                             $('#error').text('Something went wrong. Please try again later.').show();
                             $('#error').fadeToggle(3000);
                         }
@@ -348,8 +239,9 @@
                 $('#exampleModal').toggle('show');
             });
 
+
             $('.edit-btn').click(function () {
-                var admin_id = $(this).data('id');
+                admin_id = $(this).data('id');
                 $('#password').closest('.form-group').hide();
                 $('#confirm_password').closest('.form-group').hide();
                 $('.modal-title').html(`<h1 class="text-center"> Edit Admin </h1>`);
@@ -372,22 +264,10 @@
                     },
                 });
             });
-            $('.add-member-btn').click(function () {
-                $('#admin_id').val('');
-                $('#username').val('');
-                $('#email').val('');
-                $('#first_name').val('');
-                $('#last_name').val('');
-                $('#address').val('');
-                $("input[name='gender']").prop("checked", false);
-                $('#password').closest('.form-group').show();
-                $('#confirm_password').closest('.form-group').show();
-                $('#title-add').show();
-                $('.modal-title').html(`<h1 class="text-center"> Add members </h1>`);
-                $('#exampleModal').toggle('show');
-                var members_id = $(this).data('id');
-                console.log("Member ID:", members_id);
 
+            $('.add-member-btn').click(function () {
+                admin_id = $(this).data('id');
+                window.location.href = `/admins/${admin_id}/members`;
             });
         });
     </script>
