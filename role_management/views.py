@@ -12,7 +12,7 @@ from .decorators import admin_required, member_required
 from django.utils import timezone
 
 
-def is_superuser (user):
+def is_superuser(user):
     result = user.roles.filter(role_name="SUPER_ADMIN").exists()
     return result
 
@@ -51,23 +51,33 @@ class AddAdminView(View):
                 parent_id=current_user.id,
                 created_at=timezone.now(),
             )
-           
+
             admin_role = Role.objects.get(role_name="ADMIN")
             new_user.roles.add(admin_role)
-            
-                
+
             return sendResponse(code=200, message="Admin added successfully.")
 
         except Exception as e:
             return sendResponse(400, f"Error: {str(e)}")
-        
+
 
 class AddMemberView(View):
     @method_decorator(login_required(login_url="login"))
     def get(self, request, admin_id):
-        return render(request, "add_member.html", {"admin_id": admin_id})
-    
-    def post(self, request):
+        print('=================',admin_id)
+        members = Users.objects.filter(parent_id=admin_id)
+        admin_not_member = not members.exists()
+        return render(
+            request,
+            "add_member.html",
+            {
+                "admin_id": admin_id,
+                "members": members,
+                "admin_not_member" : admin_not_member,
+            },
+        )
+
+    def post(self, request, admin_id):
         try:
             email = request.POST.get("email")
             first_name = request.POST.get("first_name")
@@ -83,7 +93,9 @@ class AddMemberView(View):
             elif " " in first_name or " " in last_name:
                 return sendResponse(500, "Name cannot contain spaces")
             elif not first_name.isalpha() or not last_name.isalpha():
-                return sendResponse(500, "First and last names can only contain alphabets")
+                return sendResponse(
+                    500, "First and last names can only contain alphabets"
+                )
             elif password != confirm_password:
                 return sendResponse(500, "Password does not match")
 
@@ -98,19 +110,19 @@ class AddMemberView(View):
                 password=hashed_password,
                 address=address,
                 gender=gender,
-                parent_id=current_user.id,
+                parent_id=admin_id,
                 created_at=timezone.now(),
             )
-
+            print('====newuser====,',new_user)
             member_role = Role.objects.get(role_name="MEMBER")
             new_user.roles.add(member_role)
 
-            return sendResponse(200, "Member added successfully.")
+            return sendResponse(code=200, message="Member added successfully.")
         except Exception as e:
             print(f"Error adding member: {e}")
             return sendResponse(500, "Failed to add member. Please try again later.")
 
- 
+
 class AdminView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(admin_required)
@@ -120,7 +132,7 @@ class AdminView(View):
             admins = Users.objects.filter(roles__role_name="ADMIN").order_by("-id")
         else:
             admins = Users.objects.filter(
-                parent_id = current_user.id, roles__role_name="ADMIN"
+                parent_id=current_user.id, roles__role_name="ADMIN"
             ).order_by("-id")
 
         return render(request, "admins.html", {"admins": admins})
@@ -129,30 +141,31 @@ class AdminView(View):
 class EditAdminView(View):
     def get(self, request, admin_id):
         users_list = Users.objects.get(id=admin_id)
-        return sendResponse(code= 200,
-           message = 'success',
-           data = {
-               
-                'success': True,
+        return sendResponse(
+            code=200,
+            message="success",
+            data={
+                "success": True,
                 "email": users_list.email,
                 "first_name": users_list.first_name,
                 "last_name": users_list.last_name,
                 "username": users_list.username,
-                "address" : users_list.address,
-                "gender" : users_list.gender,
+                "address": users_list.address,
+                "gender": users_list.gender,
             },
         )
+
     def post(self, request, admin_id):
         try:
             user = Users.objects.get(id=admin_id)
             data = request.POST
-            user.email = data.get('email')
-            user.first_name = data.get('first_name')
-            user.last_name = data.get('last_name')
-            user.username = data.get('username')
-            user.address = data.get('address')
-            user.gender = data.get('gender')
-            user.created_at = timezone.now() 
+            user.email = data.get("email")
+            user.first_name = data.get("first_name")
+            user.last_name = data.get("last_name")
+            user.username = data.get("username")
+            user.address = data.get("address")
+            user.gender = data.get("gender")
+            user.created_at = timezone.now()
 
             if " " in user.username:
                 return sendResponse(500, "Username cannot use space")
@@ -160,61 +173,71 @@ class EditAdminView(View):
                 return sendResponse(500, " Name cannot use space")
             elif not user.first_name.isalpha() or not user.last_name.isalpha():
                 return sendResponse(500, "You can only use alphabet in name")
-           
-            users_list_email = Users.objects.filter(email=user.email).exclude(id=admin_id).exists()
-            users_list_username = Users.objects.filter(username=user.username).exclude(id=admin_id).exists()
-            
+
+            users_list_email = (
+                Users.objects.filter(email=user.email).exclude(id=admin_id).exists()
+            )
+            users_list_username = (
+                Users.objects.filter(username=user.username)
+                .exclude(id=admin_id)
+                .exists()
+            )
+
             if users_list_email:
                 return sendResponse(400, "Email address already exists.")
             elif users_list_username:
                 return sendResponse(400, "Username already exists.")
 
-
             user.save()
-            print('-------------------',admin_id)
-            return sendResponse(200, 'Admin updated successfully.', data={
-                'admin_id':admin_id,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "username": user.username,
-                "address": user.address,
-                "gender": user.gender,
-                "created_at": user.created_at,
-            })        
+            print("-------------------", admin_id)
+            return sendResponse(
+                200,
+                "Admin updated successfully.",
+                data={
+                    "admin_id": admin_id,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "username": user.username,
+                    "address": user.address,
+                    "gender": user.gender,
+                    "created_at": user.created_at,
+                },
+            )
         except Users.DoesNotExist:
-            return sendResponse(404, 'Admin not found')
-        
+            return sendResponse(404, "Admin not found")
+
 
 class EditMemberView(View):
     def get(self, request, member_id):
         users_list = Users.objects.get(id=member_id)
-        return sendResponse(code= 200,
-           message = 'success',
-           data = {
-               
-                'success': True,
+        return sendResponse(
+            code=200,
+            message="success",
+            data={
+                "success": True,
                 "email": users_list.email,
                 "first_name": users_list.first_name,
                 "last_name": users_list.last_name,
                 "username": users_list.username,
-                "address" : users_list.address,
-                "gender" : users_list.gender,
-                "parent_id" : users_list.parent_id,
+                "address": users_list.address,
+                "gender": users_list.gender,
+                "parent_id": users_list.parent_id,
             },
         )
+
     def post(self, request, member_id):
         try:
             user = Users.objects.get(id=member_id)
             data = request.POST
-            user.email = data.get('email')
-            user.first_name = data.get('first_name')
-            user.last_name = data.get('last_name')
-            user.username = data.get('username')
-            user.address = data.get('address')
-            user.gender = data.get('gender')
-            user.parent_id = data.get('parent_id')
-            user.created_at = timezone.now() 
+            user.email = data.get("email")
+            user.first_name = data.get("first_name")
+            user.last_name = data.get("last_name")
+            user.username = data.get("username")
+            user.address = data.get("address")
+            user.gender = data.get("gender")
+            user.parent_id = data.get("parent_id")
+            user.created_at = timezone.now()
 
             if " " in user.username:
                 return sendResponse(500, "Username cannot use space")
@@ -222,32 +245,41 @@ class EditMemberView(View):
                 return sendResponse(500, " Name cannot use space")
             elif not user.first_name.isalpha() or not user.last_name.isalpha():
                 return sendResponse(500, "You can only use alphabet in name")
-           
-            users_list_email = Users.objects.filter(email=user.email).exclude(id=member_id).exists()
-            users_list_username = Users.objects.filter(username=user.username).exclude(id=member_id).exists()
-            
+
+            users_list_email = (
+                Users.objects.filter(email=user.email).exclude(id=member_id).exists()
+            )
+            users_list_username = (
+                Users.objects.filter(username=user.username)
+                .exclude(id=member_id)
+                .exists()
+            )
+
             if users_list_email:
                 return sendResponse(400, "Email address already exists.")
             elif users_list_username:
                 return sendResponse(400, "Username already exists.")
 
-
             user.save()
-            print('-------------------',user.parent_id)
-            return sendResponse(200, 'Member updated successfully.', data={
-                'member_id':member_id,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "username": user.username,
-                "address": user.address,
-                "gender": user.gender,
-                "parent_id" : user.parent_id,
-                "created_at": user.created_at,
-            })    
-            
+            print("========parent_id=========")
+            return sendResponse(
+                200,
+                "Member updated successfully.",
+                data={
+                    "member_id": member_id,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "username": user.username,
+                    "address": user.address,
+                    "gender": user.gender,
+                    "parent_id": user.parent_id,
+                    "created_at": user.created_at,
+                },
+            )
+
         except Users.DoesNotExist:
-            return sendResponse(404, 'Member not found')
+            return sendResponse(404, "Member not found")
 
 
 class MemberView(View):
@@ -259,14 +291,10 @@ class MemberView(View):
         if current_user.is_superuser:
             members = Users.objects.filter(roles__role_name="MEMBER")
         else:
-            members = Users.objects.filter(parent_id=current_user.id, roles__role_name="MEMBER")
+            members = Users.objects.filter(
+                parent_id=current_user.id, roles__role_name="MEMBER"
+            )
 
-        # for member in members:
-        #     parent_user = Users.objects.filter(id=member.parent_id).first()
-        #     if parent_user:
-        #         member.parent_username = parent_user.username
-        #     else:
-        #         member.parent_username = ""
 
         return render(
             request,
@@ -358,13 +386,13 @@ class SignupView(View):
             hashed_password = make_password(password)
 
             user = Users.objects.create(
-                email = email,
-                first_name = first_name,
-                last_name = last_name,
-                username = username,
-                password = hashed_password,
-                address = address,
-                gender = gender,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                username=username,
+                password=hashed_password,
+                address=address,
+                gender=gender,
             )
             return sendResponse(200, "User registration successfully.")
         except Exception as e:

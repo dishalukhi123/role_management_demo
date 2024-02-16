@@ -3,7 +3,7 @@
 {% block content %}
 
 <head>
-    <title>Home</title>
+    <title>add_members</title>
     <style>
         .error {
             color: red;
@@ -83,7 +83,7 @@
                         </button>
                     </td>
                     <td>
-                        <button class="btn btn-primary  add-member-btn" data-id="{{admin.id}}">Member
+                        <button class="btn btn-primary  add-member-btn" data-id="{{admin.id}}">Members
                         </button>
                     </td>
 
@@ -266,8 +266,8 @@
             });
 
             $('.add-member-btn').click(function () {
-                admin_id = $(this).data('id');
-                window.location.href = `/admins/${admin_id}/members`;
+               let adminId = $(this).data('id');
+                window.location.href = `/admins/${adminId}/members`;
             });
         });
     </script>
