@@ -181,14 +181,14 @@
                                 let new_row = `
                                                     <tr id="tabel-set" data-row-id="${result.data.member_id}">
                                                         <td>${result.data.member_id}</td>
-                                                        <td>${result.data.username || ''}</td>
-                                                        <td>${result.data.email || ''}</td>
-                                                        <td>${result.data.first_name || ''}</td>
-                                                        <td>${result.data.last_name || ''}</td>
-                                                        <td>${result.data.address || ''}</td>
-                                                        <td>${result.data.gender || ''}</td>
-                                                        <td>${result.data.current_user}</td>
-                                                        <td>${result.data.created_at || ''}</td>                                       
+                                                        <td>${result.data.username }</td>
+                                                        <td>${result.data.email }</td>
+                                                        <td>${result.data.first_name }</td>
+                                                        <td>${result.data.last_name }</td>
+                                                        <td>${result.data.address }</td>
+                                                        <td>${result.data.gender }</td>
+                                                        <td>${result.data.parent_id}</td>
+                                                        <td>${result.data.created_at}</td>                                       
                                                         <td>
                                                             <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
                                                                 data-id="{{ member.id }}">
@@ -239,6 +239,7 @@
 
             $('.edit-btn').click(function () {
                 member_id = $(this).data('id');
+                console.log('Member ID:', member_id);
                 $('#password').closest('.form-group').hide();
                 $('#confirm_password').closest('.form-group').hide();
                 $('.modal-title').html(`<h1 class="text-center"> Edit Member </h1>`);
@@ -256,12 +257,23 @@
                             $('#address').val(result.data.address);
                             $('input[name="gender"][value="' + result.data.gender + '"]').prop('checked', true);
                             $('#member_id').val(member_id);
-
                             $('#exampleModal').toggle('show');
                         }
                     },
                 });
             });
+
+            function formatDate(date) {
+                const options = {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    weekday: 'long',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                };
+                return date.toLocaleDateString('en-US', options);
+            }
         });
     </script>
 </body>

@@ -26,7 +26,9 @@ class Users(AbstractUser):
     def formatted_created_at(self):
         local_timezone = pytz.timezone('Asia/Kolkata')
         local_created_at = self.created_at.astimezone(local_timezone)
-        return local_created_at.strftime("%I:%M %p %A, %b %d, %Y")
+        # return local_created_at.strftime("%I:%M %p %A, %b %d, %Y")
+        return local_created_at.strftime("%A,%b %d, %Y , %I:%M  %p ")
+
 
     class Meta:
         db_table = 'users'

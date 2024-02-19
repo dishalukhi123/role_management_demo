@@ -178,17 +178,22 @@
                         url: admin_id ? `/admins/${admin_id}` : `/admins/add`,
                         data: data,
                         success: function (result) {
+                            let created_at = new Date(result.data.created_at);
+                            let formatted_created_at = formatDate(created_at);
+
+                            console.log('AJAX Response:', result);
+                            console.log('admin_id:', admin_id);
                             if (result.code == 200) {
                                 let new_row = `
-                                                    <tr id="tabel-set" data-row-id="${result.data.admin_id}">
+                                <tr id="tabel-set" data-row-id="${result.data.admin_id}">
                                                         <td>${result.data.admin_id}</td>
-                                                        <td>${result.data.username || ''}</td>
-                                                        <td>${result.data.email || ''}</td>
-                                                        <td>${result.data.first_name || ''}</td>
-                                                        <td>${result.data.last_name || ''}</td>
-                                                        <td>${result.data.address || ''}</td>
-                                                        <td>${result.data.gender || ''}</td>
-                                                        <td>${result.data.created_at || ''}</td>                                       
+                                                        <td>${result.data.username}</td>
+                                                        <td>${result.data.email}</td>
+                                                        <td>${result.data.first_name}</td>
+                                                        <td>${result.data.last_name}</td>
+                                                        <td>${result.data.address}</td>
+                                                        <td>${result.data.gender}</td>
+                                                        <td>${formatted_created_at}</td>
                                                         <td>
                                                             <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
                                                                 data-id="{{ admin.id }}">
@@ -196,11 +201,10 @@
                                                             </button>
                                                         </td>
                                                         <td>
-                                                            <button class="btn btn-primary  add-member-btn" data-toggle="modal" data-target="#exampleModal" date-id="${result.data.admin_id}">Member
+                                                            <button class="btn btn-primary  add-member-btn" data-toggle="modal" data-target="#exampleModal" date-id="${result.data.admin_id}">Members
                                                             </button>
                                                         </td>
-                                                    </tr>`;
-
+                                </tr>`;
                                 $('#success').text(result.message).show();
                                 $('#success').fadeToggle(3000);
                                 $('#exampleModal').modal('hide');
@@ -265,8 +269,22 @@
                 });
             });
 
+
+            function formatDate(date) {
+                const options = {
+                    weekday: 'long',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                return date.toLocaleDateString('en-US', options);
+            }
+
+            
             $('.add-member-btn').click(function () {
-               let adminId = $(this).data('id');
+                let adminId = $(this).data('id');
                 window.location.href = `/admins/${adminId}/members`;
             });
         });

@@ -17,6 +17,22 @@ def is_superuser(user):
     return result
 
 
+def user_response(user):
+    return sendResponse(
+        code=200,
+        message="success",
+        data={
+            "success": True,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "username": user.username,
+            "address": user.address,
+            "gender": user.gender,
+            "created_at": user.created_at,
+        },
+    )
+
 class AddAdminView(View):
     def post(self, request):
         email = request.POST.get("email")
@@ -119,8 +135,7 @@ class AddMemberView(View):
 
             return sendResponse(code=200, message="Member added successfully.")
         except Exception as e:
-            print(f"Error adding member: {e}")
-            return sendResponse(500, "Failed to add member. Please try again later.")
+            return sendResponse(400, f"Error: {str(e)}")
 
 
 class AdminView(View):
@@ -128,6 +143,7 @@ class AdminView(View):
     @method_decorator(admin_required)
     def get(self, request):
         current_user = request.user
+        
         if current_user.is_superuser:
             admins = Users.objects.filter(roles__role_name="ADMIN").order_by("-id")
         else:
@@ -140,20 +156,9 @@ class AdminView(View):
 
 class EditAdminView(View):
     def get(self, request, admin_id):
-        users_list = Users.objects.get(id=admin_id)
-        return sendResponse(
-            code=200,
-            message="success",
-            data={
-                "success": True,
-                "email": users_list.email,
-                "first_name": users_list.first_name,
-                "last_name": users_list.last_name,
-                "username": users_list.username,
-                "address": users_list.address,
-                "gender": users_list.gender,
-            },
-        )
+        user = Users.objects.get(id=admin_id)
+        return user_response(user)
+
 
     def post(self, request, admin_id):
         try:
@@ -166,6 +171,9 @@ class EditAdminView(View):
             user.address = data.get("address")
             user.gender = data.get("gender")
             user.created_at = timezone.now()
+            
+           
+            print('======user.created_at=====',user.created_at)
 
             if " " in user.username:
                 return sendResponse(500, "Username cannot use space")
@@ -210,21 +218,9 @@ class EditAdminView(View):
 
 class EditMemberView(View):
     def get(self, request, member_id):
-        users_list = Users.objects.get(id=member_id)
-        return sendResponse(
-            code=200,
-            message="success",
-            data={
-                "success": True,
-                "email": users_list.email,
-                "first_name": users_list.first_name,
-                "last_name": users_list.last_name,
-                "username": users_list.username,
-                "address": users_list.address,
-                "gender": users_list.gender,
-                "parent_id": users_list.parent_id,
-            },
-        )
+        user = Users.objects.get(id=member_id)
+        return user_response(user)
+
 
     def post(self, request, member_id):
         try:
@@ -289,11 +285,11 @@ class MemberView(View):
         current_user = request.user
 
         if current_user.is_superuser:
-            members = Users.objects.filter(roles__role_name="MEMBER")
+            members = Users.objects.filter(roles__role_name="MEMBER").order_by("-id")
         else:
             members = Users.objects.filter(
                 parent_id=current_user.id, roles__role_name="MEMBER"
-            )
+            ).order_by("-id")
 
 
         return render(

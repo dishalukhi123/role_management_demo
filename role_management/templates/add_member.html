@@ -29,7 +29,7 @@
         <div class="alert alert-info" role="alert" id="info" hidden></div>
         <div class="alert alert-success" role="alert" id="admin-success" hidden>
         </div>
-        
+
         {% if user.is_superuser or current_user%}
         <div class="alert alert-success" role="alert" id="success" hidden>
             {% for message in messages %}
@@ -170,24 +170,26 @@
                         gender: $('input[name="gender"]:checked').val(),
                         csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
                     };
-                    
+
                     $.ajax({
                         type: 'POST',
                         url: member_id ? `/members/${member_id}` : `/members/add/{{admin_id}}`,
                         data: data,
                         success: function (result) {
+                            console.log('=========result=====',result)
                             if (result.code == 200) {
-                                let new_row = `
+                                if (result && result.data && result.data.member_id) {
+                                    let new_row = `
                                                     <tr id="tabel-set" data-row-id="${result.data.member_id}">
                                                         <td>${result.data.member_id}</td>
-                                                        <td>${result.data.username || ''}</td>
-                                                        <td>${result.data.email || ''}</td>
-                                                        <td>${result.data.first_name || ''}</td>
-                                                        <td>${result.data.last_name || ''}</td>
-                                                        <td>${result.data.address || ''}</td>
-                                                        <td>${result.data.gender || ''}</td>
+                                                        <td>${result.data.username}</td>
+                                                        <td>${result.data.email}</td>
+                                                        <td>${result.data.first_name}</td>
+                                                        <td>${result.data.last_name}</td>
+                                                        <td>${result.data.address}</td>
+                                                        <td>${result.data.gender}</td>
                                                         <td>${result.data.current_user}</td>
-                                                        <td>${result.data.created_at || ''}</td>                                       
+                                                        <td>${result.data.created_at}</td>                                       
                                                         <td>
                                                             <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
                                                                 data-id="{{ member.id }}">
@@ -195,13 +197,16 @@
                                                             </button>
                                                         </td>
                                                     </tr>`;
-                                $('#success').text(result.message).show();
-                                $('#success').fadeToggle(3000);
-                                $('#exampleModal').modal('hide');
-                                $('.modal-backdrop').remove();
+                                    $('#success').text(result.message).show();
+                                    $('#success').fadeToggle(3000);
+                                    $('#exampleModal').modal('hide');
+                                    $('.modal-backdrop').remove();
 
-                                if (member_id) {
-                                    $(`#tabel-set[data-row-id="${member_id}"]`).replaceWith(new_row);
+                                    if (member_id) {
+                                        $(`#tabel-set[data-row-id="${member_id}"]`).replaceWith(new_row);
+                                    }
+                                } else {
+                                    console.error('Invalid or missing data in the response:', result);
                                 }
                             } else {
                                 $('#error').text(result.message).show();
@@ -214,12 +219,13 @@
                             $('#error').fadeToggle(3000);
                         }
                     });
+
                 }
             });
 
 
             $('.add-btn').click(function () {
-                console.log('=====admin===',`{{admin_id}}`);
+                console.log('=====admin===', `{{admin_id}}`);
                 $('#member_id').val('');
                 $('#username').val('');
                 $('#email').val('');
@@ -232,7 +238,6 @@
                 $('#title-add').show();
                 $('.modal-title').html(`<h1 class="text-center"> Add Member </h1>`);
                 $('#exampleModal').toggle('show');
-                console.log('=====member_id=======', member_id);
             });
 
 
@@ -241,6 +246,7 @@
                 $('#password').closest('.form-group').hide();
                 $('#confirm_password').closest('.form-group').hide();
                 $('.modal-title').html(`<h1 class="text-center"> Edit Member </h1>`);
+
 
                 $('#form').validate().resetForm();
                 $.ajax({
@@ -260,7 +266,7 @@
                     },
                 });
             });
-          
+
         });
     </script>
 </body>
