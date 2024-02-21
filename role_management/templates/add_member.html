@@ -3,11 +3,19 @@
 {% block content %}
 
 <head>
-    <title>Home</title>
+    <title>Add Member</title>
     <style>
-        .error {
+        #email-error,
+        #first_name-error,
+        #last_name-error,
+        #username-error,
+        #password-error,
+        #confirm_password-error,
+        #address-error,
+        #gender-error {
             color: red;
         }
+
 
         .add-btn {
             margin-top: 37px;
@@ -104,6 +112,7 @@
 
         let member_id = null
 
+
         $(document).ready(function () {
 
             $('#form').validate({
@@ -163,6 +172,7 @@
                 }
             });
 
+
             $('#save-btn').on('click', function (e) {
                 e.preventDefault();
                 if ($("#form").valid()) {
@@ -173,11 +183,16 @@
                         last_name: $('#last_name').val(),
                         username: $('#username').val(),
                         password: $('#password').val(),
-                        confirm_password: $('#confirm_password').val(),
+                        confirm_password : $('#confirm_password').val(),
                         address: $('#address').val(),
                         gender: $('input[name="gender"]:checked').val(),
                         csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
                     };
+
+                    if (member_id){
+                        data.password = $('#password').val();
+                        data.confirm_password =  $('#confirm_password').val();
+                    }
 
                     $.ajax({
                         type: 'POST',
@@ -207,7 +222,7 @@
                                                         </tr>`;
 
                                 if (member_id) {
-                                    $(`#tabel-set[data-row-id="${member_id}"]`).replaceWith(new_row);
+                                    $(`#tabel-set[data-row-id="${data.member_id}"]`).replaceWith(new_row);
                                 }
                                 else {
                                     $('#add-data-message').hide();
@@ -239,11 +254,8 @@
             $('.add-btn').click(function () {
                 let admin_id = $('div[data-admin-id]').data('admin-id');
                 $('#member_id').val('');
-                $('#username').val('');
-                $('#email').val('');
-                $('#first_name').val('');
-                $('#last_name').val('');
-                $('#address').val('');
+                $('input').val('');
+                $('textarea').val('');
                 $("input[name='gender']").prop("checked", false);
                 $('#password').closest('.form-group').show();
                 $('#confirm_password').closest('.form-group').show();
@@ -253,14 +265,15 @@
             });
 
 
-            $('.edit-btn').click(function () {
-                member_id = $(this).data('id');
+            $('body').on('click', '.edit-btn', function () {
+                member_id = $(this).closest('tr').data('row-id');
                 $('#password').closest('.form-group').hide();
                 $('#confirm_password').closest('.form-group').hide();
                 $('.modal-title').html(`<h1 class="text-center"> Edit Member </h1>`);
 
-
                 $('#form').validate().resetForm();
+                $("input[name='gender']").prop("checked", false);
+
                 $.ajax({
                     type: "GET",
                     url: `/members/${member_id}`,
@@ -279,9 +292,10 @@
                 });
             });
 
+
             function updateMemberCount() {
-                let currentCount = parseInt($('#member-count').text().match(/\d+/)[0]); // Extract current count
-                $('#member-count').text(`Members (${currentCount + 1})`); // Increment and update count
+                let currentCount = parseInt($('#member-count').text().match(/\d+/)[0]);
+                $('#member-count').html(`<span class="glyphicon glyphicon-user"></span>  Members (${currentCount + 1})`);
             }
         });
     </script>

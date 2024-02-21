@@ -46,6 +46,8 @@ def admin_username(members):
 
 
 class AddAdminView(View):
+    @method_decorator(login_required(login_url="login"))
+    @method_decorator(admin_required)
     def post(self, request):
         email = request.POST.get("email")
         first_name = request.POST.get("first_name")
@@ -85,6 +87,14 @@ class AddAdminView(View):
                 created_at=timezone.now(),
             )
 
+            user_profile = Users.objects.create(
+                user=user,
+                address=address,
+                gender=gender,
+                parent_id=current_user.id,
+                created_at=timezone.now(),
+            )
+
             admin_role = Role.objects.get(role_name="ADMIN")
             user.roles.add(admin_role)
 
@@ -109,6 +119,7 @@ class AddAdminView(View):
 
 class AddMemberView(View):
     @method_decorator(login_required(login_url="login"))
+    @method_decorator(member_required)
     def get(self, request, admin_id):
         members = Users.objects.filter(parent_id=admin_id)
         admin_username(members)
@@ -196,6 +207,8 @@ class AdminView(View):
 
 
 class EditAdminView(View):
+    @method_decorator(login_required(login_url="login"))
+    @method_decorator(admin_required)
     def get(self, request, admin_id):
         user = Users.objects.get(id=admin_id)
         return user_response(user)
@@ -254,6 +267,8 @@ class EditAdminView(View):
 
 
 class EditMemberView(View):
+    @method_decorator(login_required(login_url="login"))
+    @method_decorator(member_required)
     def get(self, request, member_id ):
         user = Users.objects.get(id=member_id)
         return user_response(user)
@@ -362,17 +377,18 @@ class LoginView(View):
         password = request.POST.get("password")
         user = None
         try:
-            if "@" in username:
-                user = Users.objects.get(email=username)
-            else:
-                user = Users.objects.get(username=username)
+            user = Users.objects.get(email=username)
         except Users.DoesNotExist:
-            messages.error(request, "User does not exist.")
-        print("User:", user)  # Print the user object
+            try:
+                user = Users.objects.get(username=username)
+            except Users.DoesNotExist:
+                messages.error(request, "User does not exist.")
+                return redirect("login")
+        print("User:", user)  
         if user and check_password(password, user.password):
             request.session["user_id"] = user.id
             request.session["user_first_name"] = user.first_name
-            auth_user = authenticate(request, username=username, password=password)
+            auth_user = authenticate(request, username=user, password=password)
             if auth_user is not None:
                 login(request, auth_user)
                 next_url = request.GET.get("next")

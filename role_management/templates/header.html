@@ -15,19 +15,20 @@
 <body>
     <header>
 
-       
+
         <nav class="navbar navbar-inverse justify-content-center jus">
             <div class="container-fluid">
 
                 <div class="collapse navbar-collapse" id="myNavbar">
                     <ul class="nav navbar-nav">
-                        <li class="active"><a style="font-weight: 900" href="/"><span
-                                    class="glyphicon glyphicon-home"></span> Home </a></li>
+                        <li><a style="font-weight: 900" href="/"><span class="glyphicon glyphicon-home"></span> Home
+                            </a></li>
                         {% if user.is_superuser %}
                         <li><a href="/admins/">ADMINS</a></li>
-                        <!-- <li><a href="/members/">MEMBERS</a></li> -->
                         {% endif %}
-                        <li><a href="/members/">MEMBERS</a></li>  
+                        {% if not user.is_superuser %}
+                        <li><a href="/members/">MEMBERS</a></li>
+                        {% endif %}
                     </ul>
                     <ul class="nav navbar-nav navbar-right ">
                         <li class="active"><a style="font-weight: 900" id="logout" href="/logout/"><span
@@ -42,10 +43,17 @@
 
 
 
-</body>
+
 
 <script>
-
+    $(document).ready(function () {
+        var path = window.location.pathname;
+        $('.nav li a').each(function () {
+            var href = $(this).attr('href');
+            if (path === href) {
+                $(this).closest('li').addClass('active');
+            }
+        });
+    });
 </script>
 
-</html>

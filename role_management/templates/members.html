@@ -3,11 +3,19 @@
 {% block content %}
 
 <head>
-    <title>Home</title>
+    <title>Member</title>
     <style>
-        .error {
+        #email-error,
+        #first_name-error,
+        #last_name-error,
+        #username-error,
+        #password-error,
+        #confirm_password-error,
+        #address-error,
+        #gender-error {
             color: red;
         }
+
 
         .add-btn {
             margin-top: 37px;
@@ -21,10 +29,6 @@
 </head>
 
 <body>
-    <header>
-        {% csrf_token %}
-    </header>
-
     <div class="container">
         <div class="alert alert-info" role="alert" id="info" hidden></div>
         <div class="alert alert-success" role="alert" id="admin-success" hidden>
@@ -41,7 +45,7 @@
         <div class="row ">
             <h2 id="member-count" class="col-md-6 admincount">
                 <span class="glyphicon glyphicon-user"></span> Members ({{ members.count }})
-            </h2>            
+            </h2>
             <div class="col-md-6" style="text-align: right;">
                 <button type="button" class="btn btn-primary text-center add-btn" data-toggle="modal"
                     data-target="#exampleModal">
@@ -162,18 +166,29 @@
                 e.preventDefault();
                 if ($("#form").valid()) {
                     member_id = $('#member_id').val();
-                    var data = {
-                        email: $('#email').val(),
-                        first_name: $('#first_name').val(),
-                        last_name: $('#last_name').val(),
-                        username: $('#username').val(),
-                        password: $('#password').val(),
-                        confirm_password: $('#confirm_password').val(),
-                        address: $('#address').val(),
-                        gender: $('input[name="gender"]:checked').val(),
-                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-                    };
-
+                    if (!member_id) {
+                        var data = {
+                            email: $('#email').val(),
+                            first_name: $('#first_name').val(),
+                            last_name: $('#last_name').val(),
+                            username: $('#username').val(),
+                            password: $('#password').val(),
+                            confirm_password: $('#confirm_password').val(),
+                            address: $('#address').val(),
+                            gender: $('input[name="gender"]:checked').val(),
+                            csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                        };
+                    } else {
+                        var data = {
+                            email: $('#email').val(),
+                            first_name: $('#first_name').val(),
+                            last_name: $('#last_name').val(),
+                            username: $('#username').val(),
+                            address: $('#address').val(),
+                            gender: $('input[name="gender"]:checked').val(),
+                            csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                        }
+                    }
                     $.ajax({
                         type: 'POST',
                         url: member_id ? `/members/${member_id}` : `/members/add/{{admin_id}}`,
@@ -226,29 +241,26 @@
 
             $('.add-btn').click(function () {
                 $('#member_id').val('');
-                $('#username').val('');
-                $('#email').val('');
-                $('#first_name').val('');
-                $('#last_name').val('');
-                $('#address').val('');
+                $('input').val('');
+                $('textarea').val('');
                 $("input[name='gender']").prop("checked", false);
                 $('#password').closest('.form-group').show();
                 $('#confirm_password').closest('.form-group').show();
                 $('#title-add').show();
                 $('.modal-title').html(`<h1 class="text-center"> Add Member </h1>`);
                 $('#exampleModal').toggle('show');
-                console.log('=====member_id=======', member_id);
             });
 
 
-            $('.edit-btn').click(function () {
-                member_id = $(this).data('id');
-                console.log('Member ID:', member_id);
+            $('body').on('click', '.edit-btn', function () {
+                member_id = $(this).closest('tr').data('row-id');
                 $('#password').closest('.form-group').hide();
                 $('#confirm_password').closest('.form-group').hide();
                 $('.modal-title').html(`<h1 class="text-center"> Edit Member </h1>`);
 
                 $('#form').validate().resetForm();
+                $("input[name='gender']").prop("checked", false);
+
                 $.ajax({
                     type: "GET",
                     url: `/members/${member_id}`,
@@ -266,7 +278,12 @@
                     },
                 });
             });
-      
+
+
+            function updateMemberCount() {
+                let currentCount = parseInt($('#member-count').text().match(/\d+/)[0]);
+                $('#member-count').html(`<span class="glyphicon glyphicon-user"></span>  Members (${currentCount + 1})`);
+            }
         });
     </script>
 </body>
