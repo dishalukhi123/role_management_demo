@@ -38,7 +38,8 @@
         </div>
 
         <div class="row ">
-            <h2 class="col-md-6 admincount"><span class="glyphicon glyphicon-user"></span> Members ({{ members.count }})
+            <h2 id="member-count" class="col-md-6 admincount">
+                <span class="glyphicon glyphicon-user"></span> Members ({{ members.count }})
             </h2>
             <div class="col-md-6" style="text-align: right;">
                 <button type="button" class="btn btn-primary text-center add-btn" data-toggle="modal"
@@ -51,7 +52,7 @@
         {% include 'modal_form.html' %}
 
         <br />
-        <table class="table table-bordered table-striped">
+        <table id="add-data" class="table table-bordered table-striped">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -61,12 +62,13 @@
                     <th>Last Name</th>
                     <th>Address</th>
                     <th>Gender</th>
-                    <th>parent ID</th>
+                    <th>Admin Username</th>
                     <th>Date and Time</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
+                {% if members %}
                 {% for member in members %}
                 <tr id="tabel-set" data-row-id="{{ member.id }}">
                     <td>{{ member.id }}</td>
@@ -76,7 +78,7 @@
                     <td>{{ member.last_name }}</td>
                     <td>{{ member.address }}</td>
                     <td>{{ member.get_gender_display }}</td>
-                    <td>{{ member.parent_id}}</td>
+                    <td>{{ member.parent_username}}</td>
                     <td>{{ member.formatted_created_at }}</td>
                     <td>
                         <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
@@ -87,6 +89,12 @@
 
                 </tr>
                 {% endfor %}
+                {% else %}
+                <div id="add-data"></div>
+                <tr>
+                    <td colspan="10" class="text-center" id="add-data-message">No members found.</td>
+                </tr>
+                {% endif %}
             </tbody>
         </table>
         {% endif %}
@@ -176,10 +184,10 @@
                         url: member_id ? `/members/${member_id}` : `/members/add/{{admin_id}}`,
                         data: data,
                         success: function (result) {
-                            console.log('=========result=====',result)
+                            console.log('AJAX success:', result);
+                            console.log('Member ID:', member_id);
                             if (result.code == 200) {
-                                if (result && result.data && result.data.member_id) {
-                                    let new_row = `
+                                let new_row = `
                                                     <tr id="tabel-set" data-row-id="${result.data.member_id}">
                                                         <td>${result.data.member_id}</td>
                                                         <td>${result.data.username}</td>
@@ -188,7 +196,7 @@
                                                         <td>${result.data.last_name}</td>
                                                         <td>${result.data.address}</td>
                                                         <td>${result.data.gender}</td>
-                                                        <td>${result.data.current_user}</td>
+                                                        <td>${result.data.parent_username}</td>
                                                         <td>${result.data.created_at}</td>                                       
                                                         <td>
                                                             <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
@@ -196,19 +204,23 @@
                                                                 <span class="glyphicon glyphicon-pencil"></span>
                                                             </button>
                                                         </td>
-                                                    </tr>`;
-                                    $('#success').text(result.message).show();
-                                    $('#success').fadeToggle(3000);
-                                    $('#exampleModal').modal('hide');
-                                    $('.modal-backdrop').remove();
+                                                        </tr>`;
 
-                                    if (member_id) {
-                                        $(`#tabel-set[data-row-id="${member_id}"]`).replaceWith(new_row);
-                                    }
-                                } else {
-                                    console.error('Invalid or missing data in the response:', result);
+                                if (member_id) {
+                                    $(`#tabel-set[data-row-id="${member_id}"]`).replaceWith(new_row);
                                 }
+                                else {
+                                    $('#add-data-message').hide();
+                                    $('table tbody').append(new_row);
+                                    updateMemberCount();
+                                }
+                                $('#success').text(result.message).show();
+                                $('#success').fadeToggle(3000);
+                                $('#exampleModal').modal('hide');
+                                $('.modal-backdrop').remove();
+
                             } else {
+                                console.error('Invalid or missing data in the response:', result);
                                 $('#error').text(result.message).show();
                                 $('#error').fadeToggle(3000);
                             }
@@ -225,7 +237,7 @@
 
 
             $('.add-btn').click(function () {
-                console.log('=====admin===', `{{admin_id}}`);
+                let admin_id = $('div[data-admin-id]').data('admin-id');
                 $('#member_id').val('');
                 $('#username').val('');
                 $('#email').val('');
@@ -267,6 +279,10 @@
                 });
             });
 
+            function updateMemberCount() {
+                let currentCount = parseInt($('#member-count').text().match(/\d+/)[0]); // Extract current count
+                $('#member-count').text(`Members (${currentCount + 1})`); // Increment and update count
+            }
         });
     </script>
 </body>

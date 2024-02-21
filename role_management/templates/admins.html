@@ -157,6 +157,7 @@
                 }
             });
 
+
             $('#save-btn').on('click', function (e) {
                 e.preventDefault();
                 if ($("#form").valid()) {
@@ -178,11 +179,6 @@
                         url: admin_id ? `/admins/${admin_id}` : `/admins/add`,
                         data: data,
                         success: function (result) {
-                            let created_at = new Date(result.data.created_at);
-                            let formatted_created_at = formatDate(created_at);
-
-                            console.log('AJAX Response:', result);
-                            console.log('admin_id:', admin_id);
                             if (result.code == 200) {
                                 let new_row = `
                                 <tr id="tabel-set" data-row-id="${result.data.admin_id}">
@@ -193,7 +189,7 @@
                                                         <td>${result.data.last_name}</td>
                                                         <td>${result.data.address}</td>
                                                         <td>${result.data.gender}</td>
-                                                        <td>${formatted_created_at}</td>
+                                                        <td>${result.data.created_at}</td>
                                                         <td>
                                                             <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
                                                                 data-id="{{ admin.id }}">
@@ -201,18 +197,20 @@
                                                             </button>
                                                         </td>
                                                         <td>
-                                                            <button class="btn btn-primary  add-member-btn" data-toggle="modal" data-target="#exampleModal" date-id="${result.data.admin_id}">Members
+                                                            <button class="btn btn-primary  add-member-btn"  date-id="${result.data.admin_id}">Members
                                                             </button>
                                                         </td>
                                 </tr>`;
+
+                                if (admin_id) {
+                                    $(`#tabel-set[data-row-id="${admin_id}"]`).replaceWith(new_row);
+                                } else {
+                                    $('table tbody').prepend(new_row);
+                                }
                                 $('#success').text(result.message).show();
                                 $('#success').fadeToggle(3000);
                                 $('#exampleModal').modal('hide');
                                 $('.modal-backdrop').remove();
-
-                                if (admin_id) {
-                                    $(`#tabel-set[data-row-id="${admin_id}"]`).replaceWith(new_row);
-                                }
                             } else {
                                 $('#error').text(result.message).show();
                                 $('#error').fadeToggle(3000);
@@ -270,22 +268,15 @@
             });
 
 
-            function formatDate(date) {
-                const options = {
-                    weekday: 'long',
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                };
-                return date.toLocaleDateString('en-US', options);
-            }
-
-            
-            $('.add-member-btn').click(function () {
-                let adminId = $(this).data('id');
-                window.location.href = `/admins/${adminId}/members`;
+            $(document).on('click', '.add-member-btn', function () {
+                let $row = $(this).closest('tr');
+                let adminId = $row.data('row-id');
+                console.log('Admin ID:', adminId);
+                if (adminId) {
+                    window.location.href = `/admins/${adminId}/members`;
+                } else {
+                    console.error('Admin ID is undefined or null');
+                }
             });
         });
     </script>
