@@ -3,22 +3,6 @@
 
 {% block content %}
 
-<head>
-    {{% base.html}}
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Admin</title>
-</head>
+    <h1>Edit Member</h1>
 
-<body>
-    <h1>Edit Admin</h1>
-
-
-    <form method="post">
-        {% csrf_token %}
-
-        <button type="submit">Save Changes</button>
-
-    </form>
-</body>
-{% endblock content %}
+{% endblock %}

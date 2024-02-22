@@ -13,7 +13,6 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 
 
-
 def is_superuser(user):
     result = user.roles.filter(role_name="SUPER_ADMIN").exists()
     return result
@@ -70,6 +69,8 @@ class AddAdminView(View):
         
         if Users.objects.filter(username=username).exists():
             return sendResponse(500, "Username already exists")
+        elif Users.objects.filter(email=email).exists():
+            return sendResponse(500, "Email already exists")
 
         
         current_user = request.user
@@ -87,13 +88,6 @@ class AddAdminView(View):
                 created_at=timezone.now(),
             )
 
-            user_profile = Users.objects.create(
-                user=user,
-                address=address,
-                gender=gender,
-                parent_id=current_user.id,
-                created_at=timezone.now(),
-            )
 
             admin_role = Role.objects.get(role_name="ADMIN")
             user.roles.add(admin_role)
@@ -153,6 +147,11 @@ class AddMemberView(View):
                 )
             elif password != confirm_password:
                 return sendResponse(500, "Password does not match")
+            
+            if Users.objects.filter(username=username).exists():
+                return sendResponse(500, "Username already exists")
+            elif Users.objects.filter(email=email).exists():
+                return sendResponse(500, "Email already exists")
 
             hashed_password = make_password(password)
 
@@ -167,7 +166,6 @@ class AddMemberView(View):
                 parent_id=admin_id,
                 created_at=timezone.now(),
             )
-            print('====newuser====,',user)
             member_role = Role.objects.get(role_name="MEMBER")
             user.roles.add(member_role)
             parent_user = Users.objects.filter(id=admin_id).first()
@@ -388,7 +386,7 @@ class LoginView(View):
         if user and check_password(password, user.password):
             request.session["user_id"] = user.id
             request.session["user_first_name"] = user.first_name
-            auth_user = authenticate(request, username=user, password=password)
+            auth_user = authenticate(request, username=user.username, password=password)
             if auth_user is not None:
                 login(request, auth_user)
                 next_url = request.GET.get("next")
@@ -397,9 +395,10 @@ class LoginView(View):
                 else:
                     return redirect("base")
             else:
-                return sendResponse(500, "User not login successfully")
+                messages.error(request, "User not logged in successfully")
         else:
-            return sendResponse(500, "Incorrect username or password.")
+            messages.error(request, "Incorrect username or password.")
+        return redirect("login")
 
 
 class HomeView(View):

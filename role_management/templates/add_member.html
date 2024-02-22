@@ -1,208 +1,211 @@
 {% extends "base.html" %}
 
+
+{% block title %}
+Members
+{% endblock %}
+
+{% block css %}
+<style>
+    #email-error,
+    #first_name-error,
+    #last_name-error,
+    #username-error,
+    #password-error,
+    #confirm_password-error,
+    #address-error {
+        color: red;
+    }
+
+    .add-btn {
+        margin-top: 37px;
+    }
+
+    .admincount {
+        margin-top: 37px;
+
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-
-<head>
-    <title>Add Member</title>
-    <style>
-        #email-error,
-        #first_name-error,
-        #last_name-error,
-        #username-error,
-        #password-error,
-        #confirm_password-error,
-        #address-error,
-        #gender-error {
-            color: red;
-        }
-
-
-        .add-btn {
-            margin-top: 37px;
-        }
-
-        .admincount {
-            margin-top: 37px;
-
-        }
-    </style>
-</head>
-
-<body>
-    <header>
-        {% csrf_token %}
-    </header>
-    <div data-admin-id="{{admin_id}}"></div>
-    <div class="container">
-        <div class="alert alert-info" role="alert" id="info" hidden></div>
-        <div class="alert alert-success" role="alert" id="admin-success" hidden>
-        </div>
-
-        {% if user.is_superuser or current_user%}
-        <div class="alert alert-success" role="alert" id="success" hidden>
-            {% for message in messages %}
-            {{ message }}
-            {% endfor %}
-        </div>
-
-        <div class="row ">
-            <h2 id="member-count" class="col-md-6 admincount">
-                <span class="glyphicon glyphicon-user"></span> Members ({{ members.count }})
-            </h2>
-            <div class="col-md-6" style="text-align: right;">
-                <button type="button" class="btn btn-primary text-center add-btn" data-toggle="modal"
-                    data-target="#exampleModal">
-                    Add Member </button>
-                <br />
-            </div>
-        </div>
-
-        {% include 'modal_form.html' %}
-
-        <br />
-        <table id="add-data" class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Address</th>
-                    <th>Gender</th>
-                    <th>Admin Username</th>
-                    <th>Date and Time</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if members %}
-                {% for member in members %}
-                <tr id="tabel-set" data-row-id="{{ member.id }}">
-                    <td>{{ member.id }}</td>
-                    <td>{{ member.username }}</td>
-                    <td>{{ member.email }}</td>
-                    <td>{{ member.first_name }}</td>
-                    <td>{{ member.last_name }}</td>
-                    <td>{{ member.address }}</td>
-                    <td>{{ member.get_gender_display }}</td>
-                    <td>{{ member.parent_username}}</td>
-                    <td>{{ member.formatted_created_at }}</td>
-                    <td>
-                        <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
-                            data-id="{{ member.id }}">
-                            <span class="glyphicon glyphicon-pencil"></span>
-                        </button>
-                    </td>
-
-                </tr>
-                {% endfor %}
-                {% else %}
-                <div id="add-data"></div>
-                <tr>
-                    <td colspan="10" class="text-center" id="add-data-message">No members found.</td>
-                </tr>
-                {% endif %}
-            </tbody>
-        </table>
-        {% endif %}
+<div data-admin-id="{{admin_id}}"></div>
+<div class="container">
+    <div class="alert alert-info" role="alert" id="info" hidden></div>
+    <div class="alert alert-success" role="alert" id="admin-success" hidden>
     </div>
 
-    <script>
+    {% if user.is_superuser or current_user%}
+    <div class="alert alert-success" role="alert" id="success" hidden>
+        {% for message in messages %}
+        {{ message }}
+        {% endfor %}
+    </div>
 
-        let member_id = null
+    <div class="row ">
+        <h2 id="member-count" class="col-md-6 admincount">
+            <span class="glyphicon glyphicon-user"></span> Members ({{ members.count }})
+        </h2>
+        <div class="col-md-6" style="text-align: right;">
+            <button type="button" class="btn btn-primary text-center add-btn" data-toggle="modal"
+                data-target="#exampleModal">
+                Add Member </button>
+            <br />
+        </div>
+    </div>
 
+    {% include 'modal_form.html' %}
 
-        $(document).ready(function () {
+    <br />
+    <table id="add-data" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Address</th>
+                <th>Gender</th>
+                <th>Admin Username</th>
+                <th>Date and Time</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if members %}
+            {% for member in members %}
+            <tr id="tabel-set" data-row-id="{{ member.id }}">
+                <td>{{ member.id }}</td>
+                <td>{{ member.username }}</td>
+                <td>{{ member.email }}</td>
+                <td>{{ member.first_name }}</td>
+                <td>{{ member.last_name }}</td>
+                <td>{{ member.address }}</td>
+                <td>{{ member.gender }}</td>
+                <td>{{ member.parent_username}}</td>
+                <td>{{ member.formatted_created_at }}</td>
+                <td>
+                    <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
+                        data-id="{{ member.id }}">
+                        <span class="glyphicon glyphicon-pencil"></span>
+                    </button>
+                </td>
 
-            $('#form').validate({
-                rules: {
-                    email: {
-                        required: true
-                    },
-                    first_name: {
-                        required: true
-                    },
-                    last_name: {
-                        required: true
-                    },
-                    username: {
-                        required: true,
-                        maxlength: 15,
-                    },
-                    password: {
-                        minlength: 5,
-                    },
-                    confirm_password: {
-                        minlength: 5,
-                        equalTo: "#password"
-                    },
-                    address: {
-                        required: true
-                    },
-                    gender: {
-                        required: true
-                    },
+            </tr>
+            {% endfor %}
+            {% else %}
+            <div id="add-data"></div>
+            <tr>
+                <td colspan="10" class="text-center" id="add-data-message">No members found.</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+
+    let member_id = null
+
+    $(document).ready(function () {
+
+        $('#form').validate({
+            rules: {
+                email: {
+                    required: true
                 },
-                messages: {
-                    email: {
-                        required: 'Enter please in Email.'
-                    },
-                    first_name: {
-                        required: 'Enter please a First Name.'
-                    },
-                    last_name: {
-                        required: 'Enter please a Last Name.'
-                    },
-                    username: {
-                        required: 'Enter please a User Name.',
-                    },
-                    password: {
-                        required: 'Enter please a Password.'
-                    },
-                    confirm_password: {
-                        required: 'Enter please a Confirm Password.'
-                    },
-                    address: {
-                        required: 'Enter please a Address.'
-                    },
-                    gender: {
-                        required: 'please choose any one Gender.'
-                    },
-                }
-            });
+                first_name: {
+                    required: true
+                },
+                last_name: {
+                    required: true
+                },
+                username: {
+                    required: true,
+                    maxlength: 15,
+                },
+                password: {
+                    minlength: 5,
+                },
+                confirm_password: {
+                    minlength: 5,
+                    equalTo: "#password"
+                },
+                address: {
+                    required: true
+                },
+                gender: {
+                    required: true
+                },
+            },
+            messages: {
+                email: {
+                    required: 'Enter please in Email.'
+                },
+                first_name: {
+                    required: 'Enter please a First Name.'
+                },
+                last_name: {
+                    required: 'Enter please a Last Name.'
+                },
+                username: {
+                    required: 'Enter please a User Name.',
+                },
+                password: {
+                    required: 'Enter please a Password.'
+                },
+                confirm_password: {
+                    required: 'Enter please a Confirm Password.'
+                },
+                address: {
+                    required: 'Enter please a Address.'
+                },
+                gender: {
+                    required: 'please choose any one Gender.'
+                },
+            }
+        });
 
 
-            $('#save-btn').on('click', function (e) {
-                e.preventDefault();
-                if ($("#form").valid()) {
-                    member_id = $('#member_id').val();
+        $('#save-btn').on('click', function (e) {
+            e.preventDefault();
+            if ($("#form").valid()) {
+                member_id = $('#member_id').val();
+                if (!member_id) {
                     var data = {
-                        email: $('#email').val(),
-                        first_name: $('#first_name').val(),
-                        last_name: $('#last_name').val(),
-                        username: $('#username').val(),
-                        password: $('#password').val(),
-                        confirm_password : $('#confirm_password').val(),
-                        address: $('#address').val(),
+                        email: $('#email').val().trim(),
+                        first_name: $('#first_name').val().trim(),
+                        last_name: $('#last_name').val().trim(),
+                        username: $('#username').val().trim(),
+                        password: $('#password').val().trim(),
+                        confirm_password: $('#confirm_password').val().trim(),
+                        address: $('#address').val().trim(),
                         gender: $('input[name="gender"]:checked').val(),
                         csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
                     };
-
-                    if (member_id){
-                        data.password = $('#password').val();
-                        data.confirm_password =  $('#confirm_password').val();
+                } else {
+                    var data = {
+                        email: $('#email').val().trim(),
+                        first_name: $('#first_name').val().trim(),
+                        last_name: $('#last_name').val().trim(),
+                        username: $('#username').val().trim(),
+                        address: $('#address').val().trim(),
+                        gender: $('input[name="gender"]:checked').val(),
+                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
                     }
+                }
 
-                    $.ajax({
-                        type: 'POST',
-                        url: member_id ? `/members/${member_id}` : `/members/add/{{admin_id}}`,
-                        data: data,
-                        success: function (result) {
-                            console.log('AJAX success:', result);
-                            console.log('Member ID:', member_id);
-                            if (result.code == 200) {
-                                let new_row = `
+                $.ajax({
+                    type: 'POST',
+                    url: member_id ? `/members/${member_id}` : `/members/add/{{admin_id}}`,
+                    data: data,
+                    success: function (result) {
+                        if (result.code == 200) {
+                            let new_row = `
                                                     <tr id="tabel-set" data-row-id="${result.data.member_id}">
                                                         <td>${result.data.member_id}</td>
                                                         <td>${result.data.username}</td>
@@ -221,83 +224,82 @@
                                                         </td>
                                                         </tr>`;
 
-                                if (member_id) {
-                                    $(`#tabel-set[data-row-id="${data.member_id}"]`).replaceWith(new_row);
-                                }
-                                else {
-                                    $('#add-data-message').hide();
-                                    $('table tbody').append(new_row);
-                                    updateMemberCount();
-                                }
-                                $('#success').text(result.message).show();
-                                $('#success').fadeToggle(3000);
-                                $('#exampleModal').modal('hide');
-                                $('.modal-backdrop').remove();
 
-                            } else {
-                                console.error('Invalid or missing data in the response:', result);
-                                $('#error').text(result.message).show();
-                                $('#error').fadeToggle(3000);
+                            if (member_id) {
+                                $(`#tabel-set[data-row-id="${member_id}"]`).replaceWith(new_row);
                             }
-                        },
-                        error: function (error) {
-                            console.log('Ajax request failed with error:', error);
-                            $('#error').text('Something went wrong. Please try again later.').show();
+                            else {
+                                $('#add-data-message').hide();
+                                $('table tbody').append(new_row);
+                                updateMemberCount();
+                            }
+                            $('#success').text(result.message).show();
+                            $('#success').fadeToggle(3000);
+                            $('#exampleModal').modal('hide');
+                            $('.modal-backdrop').remove();
+
+                        } else {
+                            console.error('Invalid or missing data in the response:', result);
+                            $('#error').text(result.message).show();
                             $('#error').fadeToggle(3000);
                         }
-                    });
-
-                }
-            });
-
-
-            $('.add-btn').click(function () {
-                let admin_id = $('div[data-admin-id]').data('admin-id');
-                $('#member_id').val('');
-                $('input').val('');
-                $('textarea').val('');
-                $("input[name='gender']").prop("checked", false);
-                $('#password').closest('.form-group').show();
-                $('#confirm_password').closest('.form-group').show();
-                $('#title-add').show();
-                $('.modal-title').html(`<h1 class="text-center"> Add Member </h1>`);
-                $('#exampleModal').toggle('show');
-            });
-
-
-            $('body').on('click', '.edit-btn', function () {
-                member_id = $(this).closest('tr').data('row-id');
-                $('#password').closest('.form-group').hide();
-                $('#confirm_password').closest('.form-group').hide();
-                $('.modal-title').html(`<h1 class="text-center"> Edit Member </h1>`);
-
-                $('#form').validate().resetForm();
-                $("input[name='gender']").prop("checked", false);
-
-                $.ajax({
-                    type: "GET",
-                    url: `/members/${member_id}`,
-                    success: function (result) {
-                        if (result.code == 200) {
-                            $('#email').val(result.data.email);
-                            $('#first_name').val(result.data.first_name);
-                            $('#last_name').val(result.data.last_name);
-                            $('#username').val(result.data.username);
-                            $('#address').val(result.data.address);
-                            $('input[name="gender"][value="' + result.data.gender + '"]').prop('checked', true);
-                            $('#member_id').val(member_id);
-                            $('#exampleModal').toggle('show');
-                        }
                     },
+                    error: function (error) {
+                        console.log('Ajax request failed with error:', error);
+                        $('#error').text('Something went wrong. Please try again later.').show();
+                        $('#error').fadeToggle(3000);
+                    }
                 });
-            });
 
-
-            function updateMemberCount() {
-                let currentCount = parseInt($('#member-count').text().match(/\d+/)[0]);
-                $('#member-count').html(`<span class="glyphicon glyphicon-user"></span>  Members (${currentCount + 1})`);
             }
         });
-    </script>
-</body>
-{% endblock content %}
+
+
+        $('.add-btn').click(function () {
+            let admin_id = $('div[data-admin-id]').data('admin-id');
+            $('#member_id').val('');
+            $('#form').trigger('reset');
+            $("input[name='gender']").prop("checked", false);
+            $('#password').closest('.form-group').show();
+            $('#confirm_password').closest('.form-group').show();
+            $('#title-add').show();
+            $('.modal-title').html(`<h1 class="text-center"> Add Member </h1>`);
+            $('#exampleModal').toggle('show');
+            $('#form').validate().resetForm();
+        });
+
+
+        $('body').on('click', '.edit-btn', function () {
+            member_id = $(this).closest('tr').data('row-id');
+            $('#password').closest('.form-group').hide();
+            $('#confirm_password').closest('.form-group').hide();
+            $('.modal-title').html(`<h1 class="text-center"> Edit Member </h1>`);
+
+            $('#form').validate().resetForm();
+            $.ajax({
+                type: "GET",
+                url: `/members/${member_id}`,
+                success: function (result) {
+                    if (result.code == 200) {
+                        $('#email').val(result.data.email);
+                        $('#first_name').val(result.data.first_name);
+                        $('#last_name').val(result.data.last_name);
+                        $('#username').val(result.data.username);
+                        $('#address').val(result.data.address);
+                        $('input[name="gender"][value="' + result.data.gender + '"]').prop('checked', true);
+                        $('#member_id').val(member_id);
+                        $('#exampleModal').toggle('show');
+                    }
+                },
+            });
+        });
+
+
+        function updateMemberCount() {
+            let currentCount = parseInt($('#member-count').text().match(/\d+/)[0]);
+            $('#member-count').html(`<span class="glyphicon glyphicon-user"></span>  Members (${currentCount + 1})`);
+        }
+    });
+
+</script>
+{% endblock %}

@@ -1,32 +1,34 @@
 {% extends "base.html" %}
 
+
+{% block title %}
+Admin
+{% endblock %}
+
+{% block css %}
+<style>
+    #email-error,
+    #first_name-error,
+    #last_name-error,
+    #username-error,
+    #password-error,
+    #confirm_password-error,
+    #address-error {
+        color: red;
+    }
+
+    .add-btn {
+        margin-top: 37px;
+    }
+
+    .admincount {
+        margin-top: 37px;
+
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-
-<head>
-    <title>add_members</title>
-    <style>
-        #email-error,
-        #first_name-error,
-        #last_name-error,
-        #username-error,
-        #password-error,
-        #confirm_password-error,
-        #address-error,
-        #gender-error {
-            color: red;
-        }
-
-        .add-btn {
-            margin-top: 37px;
-        }
-
-        .admincount {
-            margin-top: 37px;
-
-        }
-    </style>
-</head>
-
 <div class="container">
     <div class="alert alert-info" role="alert" id="info" hidden></div>
     <div class="alert alert-success" role="alert" id="admin-success" hidden>
@@ -95,12 +97,15 @@
     </table>
     {% endif %}
 </div>
+{% endblock %}
 
+{% block js %}
 <script>
 
     let admin_id = null
 
     $(document).ready(function () {
+
 
         $('#form').validate({
             rules: {
@@ -164,20 +169,28 @@
             e.preventDefault();
             if ($("#form").valid()) {
                 admin_id = $('#admin_id').val();
-
-                var data = {
-                    email: $('#email').val(),
-                    first_name: $('#first_name').val(),
-                    last_name: $('#last_name').val(),
-                    username: $('#username').val(),
-                    address: $('#address').val(),
-                    gender: $('input[name="gender"]:checked').val(),
-                    csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-                };
-
                 if (!admin_id) {
-                    data.password = $('#password').val();
-                    data.confirm_password = $('#confirm_password').val();
+                    var data = {
+                        email: $('#email').val().trim(),
+                        first_name: $('#first_name').val().trim(),
+                        last_name: $('#last_name').val().trim(),
+                        username: $('#username').val().trim(),
+                        password: $('#password').val().trim(),
+                        confirm_password: $('#confirm_password').val().trim(),
+                        address: $('#address').val().trim(),
+                        gender: $('input[name="gender"]:checked').val(),
+                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                    };
+                } else {
+                    var data = {
+                        email: $('#email').val().trim(),
+                        first_name: $('#first_name').val().trim(),
+                        last_name: $('#last_name').val().trim(),
+                        username: $('#username').val().trim(),
+                        address: $('#address').val().trim(),
+                        gender: $('input[name="gender"]:checked').val(),
+                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                    }
                 }
 
                 $.ajax({
@@ -207,7 +220,6 @@
                                                             </button>
                                                         </td>
                                 </tr>`;
-
                             if (admin_id) {
                                 $(`#tabel-set[data-row-id="${admin_id}"]`).replaceWith(new_row);
                             } else {
@@ -233,8 +245,7 @@
 
         $('.add-btn').click(function () {
             $('#admin_id').val('');
-            $('input').val('');
-            $('textarea').val('');
+            $('#form').trigger('reset');
             $("input[name='gender']").prop("checked", false);
             $('#password').closest('.form-group').show();
             $('#confirm_password').closest('.form-group').show();
@@ -283,4 +294,4 @@
         });
     });
 </script>
-{% endblock content %}
+{% endblock %}
