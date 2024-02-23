@@ -64,7 +64,8 @@ Admin
                 <th>Last Name</th>
                 <th>Address</th>
                 <th>Gender</th>
-                <th>Date and Time</th>
+                <th>Created</th>
+                <th>Updated</th>
                 <th>Action</th>
                 <th>Add Member</th>
             </tr>
@@ -80,6 +81,7 @@ Admin
                 <td>{{ admin.address }}</td>
                 <td>{{ admin.gender }}</td>
                 <td>{{ admin.formatted_created_at }}</td>
+                <td>{{ admin.formatted_updated_at }}</td>
                 <td>
                     <button class="btn btn-primary  edit-btn" id="edit-button" data-toggle="modal"
                         data-target="#exampleModal" data-id="{{ admin.id }}">
@@ -96,6 +98,23 @@ Admin
         </tbody>
     </table>
     {% endif %}
+    
+<!--     
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if admins.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ admins.previous_page_number }}">Previous</a></li>
+            {% endif %}
+            {% for page_number in admins.paginator.page_range %}
+            <li class="page-item {% if admins.number == page_number %}active{% endif %}">
+                <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>
+            </li>
+            {% endfor %}
+            {% if admins.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ admins.next_page_number }}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav> -->
 </div>
 {% endblock %}
 
@@ -209,6 +228,7 @@ Admin
                                                         <td>${result.data.address}</td>
                                                         <td>${result.data.gender}</td>
                                                         <td>${result.data.created_at}</td>
+                                                        <td>${result.data.updated_at}</td>                                                                             
                                                         <td>
                                                             <button class="btn btn-primary  edit-btn" id="edit-button" data-toggle="modal" data-target="#exampleModal"
                                                                 data-id="{{ admin.id }}">

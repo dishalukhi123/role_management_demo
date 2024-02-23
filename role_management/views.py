@@ -11,6 +11,8 @@ from django.contrib import messages
 from .decorators import admin_required, member_required
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 
 def is_superuser(user):
@@ -65,14 +67,12 @@ class AddAdminView(View):
             return sendResponse(500, "You can only use alphabets in the first name")
         elif password != confirm_password:
             return sendResponse(500, "Password does not match")
-        
-        
+
         if Users.objects.filter(username=username).exists():
             return sendResponse(500, "Username already exists")
         elif Users.objects.filter(email=email).exists():
             return sendResponse(500, "Email already exists")
 
-        
         current_user = request.user
         try:
             hashed_password = make_password(password)
@@ -88,24 +88,24 @@ class AddAdminView(View):
                 created_at=timezone.now(),
             )
 
-
             admin_role = Role.objects.get(role_name="ADMIN")
             user.roles.add(admin_role)
 
             return sendResponse(
-                    code=200,
-                    message="Admin added successfully.",
-                    data={
-                        "admin_id" : user.id,
-                        "email": user.email,
-                        "first_name": user.first_name,
-                        "last_name": user.last_name,
-                        "username": user.username,
-                        "address": user.address,
-                        "gender": user.gender,
-                        "created_at": user.formatted_created_at(),
-                    }
-                )
+                code=200,
+                message="Admin added successfully.",
+                data={
+                    "admin_id": user.id,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "username": user.username,
+                    "address": user.address,
+                    "gender": user.gender,
+                    "created_at": user.formatted_created_at(),
+                    "updated_at": user.formatted_updated_at(),
+                },
+            )
 
         except Exception as e:
             return sendResponse(400, f"Error: {str(e)}")
@@ -147,11 +147,7 @@ class AddMemberView(View):
                 )
             elif password != confirm_password:
                 return sendResponse(500, "Password does not match")
-            
-            if Users.objects.filter(username=username).exists():
-                return sendResponse(500, "Username already exists")
-            elif Users.objects.filter(email=email).exists():
-                return sendResponse(500, "Email already exists")
+
 
             hashed_password = make_password(password)
 
@@ -171,19 +167,22 @@ class AddMemberView(View):
             parent_user = Users.objects.filter(id=admin_id).first()
             parent_username = parent_user.username if parent_user else ""
 
-            return sendResponse(200,"Member added successfully.",
-                    data={
-                        "member_id" : user.id,
-                        "email": user.email,
-                        "first_name": user.first_name,
-                        "last_name": user.last_name,
-                        "username": user.username,
-                        "address": user.address,
-                        "gender": user.gender,
-                        "parent_username" : parent_username,
-                        "created_at": user.formatted_created_at(),
-                    }
-                )
+            return sendResponse(
+                200,
+                "Member added successfully.",
+                data={
+                    "member_id": user.id,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "username": user.username,
+                    "address": user.address,
+                    "gender": user.gender,
+                    "parent_username": parent_username,
+                    "created_at": user.formatted_created_at(),
+                    "updated_at": user.formatted_updated_at(),
+                },
+            )
         except Exception as e:
             return sendResponse(400, f"Error: {str(e)}")
 
@@ -193,13 +192,22 @@ class AdminView(View):
     @method_decorator(admin_required)
     def get(self, request):
         current_user = request.user
-        
+
         if current_user.is_superuser:
             admins = Users.objects.filter(roles__role_name="ADMIN").order_by("-id")
         else:
             admins = Users.objects.filter(
                 parent_id=current_user.id, roles__role_name="ADMIN"
             ).order_by("-id")
+
+        # paginator = Paginator(admins, 10)  
+        # page_number = request.GET.get('page')
+        # try:
+        #     admins = paginator.page(page_number)
+        # except PageNotAnInteger:
+        #     admins = paginator.page(1)
+        # except EmptyPage:
+        #     admins = paginator.page(paginator.num_pages)
 
         return render(request, "admins.html", {"admins": admins})
 
@@ -211,7 +219,6 @@ class EditAdminView(View):
         user = Users.objects.get(id=admin_id)
         return user_response(user)
 
-
     def post(self, request, admin_id):
         try:
             user = Users.objects.get(id=admin_id)
@@ -222,8 +229,8 @@ class EditAdminView(View):
             user.username = data.get("username")
             user.address = data.get("address")
             user.gender = data.get("gender")
-            user.created_at = timezone.now()
-            
+            user.updated_at = timezone.now()
+
             if " " in user.username:
                 return sendResponse(500, "Username cannot use space")
             elif " " in user.first_name or " " in user.last_name:
@@ -258,6 +265,7 @@ class EditAdminView(View):
                     "address": user.address,
                     "gender": user.gender,
                     "created_at": user.formatted_created_at(),
+                    "updated_at": user.formatted_updated_at(),
                 },
             )
         except Users.DoesNotExist:
@@ -267,12 +275,11 @@ class EditAdminView(View):
 class EditMemberView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(member_required)
-    def get(self, request, member_id ):
+    def get(self, request, member_id):
         user = Users.objects.get(id=member_id)
         return user_response(user)
 
-
-    def post(self, request, member_id ):
+    def post(self, request, member_id):
         try:
             user = Users.objects.get(id=member_id)
             data = request.POST
@@ -282,7 +289,7 @@ class EditMemberView(View):
             user.username = data.get("username")
             user.address = data.get("address")
             user.gender = data.get("gender")
-            user.created_at = timezone.now()
+            user.updated_at = timezone.now()
 
             if " " in user.username:
                 return sendResponse(500, "Username cannot use space")
@@ -299,11 +306,12 @@ class EditMemberView(View):
                 .exclude(id=member_id)
                 .exists()
             )
-            
+
             if users_list_email:
                 return sendResponse(400, "Email address already exists.")
             elif users_list_username:
                 return sendResponse(400, "Username already exists.")
+
 
             user.save()
             parent_user = None
@@ -311,7 +319,7 @@ class EditMemberView(View):
                 parent_user = get_object_or_404(Users, id=user.parent_id)
                 parent_username = parent_user.username
             else:
-                parent_username = None            
+                parent_username = None
             return sendResponse(
                 200,
                 "Member updated successfully.",
@@ -325,6 +333,7 @@ class EditMemberView(View):
                     "gender": user.gender,
                     "parent_username": parent_username,
                     "created_at": user.formatted_created_at(),
+                    "updated_at": user.formatted_updated_at(),
                 },
             )
 
@@ -344,7 +353,7 @@ class MemberView(View):
             members = Users.objects.filter(
                 parent_id=current_user.id, roles__role_name="MEMBER"
             ).order_by("-id")
-  
+
         admin_username(members)
 
         return render(
@@ -374,6 +383,7 @@ class LoginView(View):
         username = request.POST.get("username")
         password = request.POST.get("password")
         user = None
+
         try:
             user = Users.objects.get(email=username)
         except Users.DoesNotExist:
@@ -382,7 +392,8 @@ class LoginView(View):
             except Users.DoesNotExist:
                 messages.error(request, "User does not exist.")
                 return redirect("login")
-        print("User:", user)  
+
+        print("User:", user)
         if user and check_password(password, user.password):
             request.session["user_id"] = user.id
             request.session["user_first_name"] = user.first_name
@@ -397,18 +408,20 @@ class LoginView(View):
             else:
                 messages.error(request, "User not logged in successfully")
         else:
-            messages.error(request, "Incorrect username or password.")
-        return redirect("login")
+            messages.error(request, "Incorrect password.")
+            return redirect("login")
 
 
 class HomeView(View):
     @method_decorator(login_required(login_url="login"))
     def get(self, request):
         user_first_name = request.session.get("user_first_name")
+        user_member_role = request.user.roles.filter(role_name="MEMBER").exists()
+
         return render(
             request,
             "index.html",
-            {"user_first_name": user_first_name},
+            {"user_first_name": user_first_name , "user_member_role" : user_member_role},
         )
 
 

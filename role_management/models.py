@@ -23,11 +23,15 @@ class Users(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
     def formatted_created_at(self):
         local_timezone = pytz.timezone('Asia/Kolkata')
         local_created_at = self.created_at.astimezone(local_timezone)
         return local_created_at.strftime("%I:%M %p %A, %b %d, %Y")
+    
+    def formatted_updated_at(self):
+        local_timezone = pytz.timezone('Asia/Kolkata')
+        local_updated_at = self.updated_at.astimezone(local_timezone)
+        return local_updated_at.strftime("%I:%M %p %A, %b %d, %Y")
 
 
     class Meta:

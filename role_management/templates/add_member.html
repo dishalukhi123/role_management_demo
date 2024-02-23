@@ -68,7 +68,8 @@ Members
                 <th>Address</th>
                 <th>Gender</th>
                 <th>Admin Username</th>
-                <th>Date and Time</th>
+                <th>Created</th>
+                <th>Updated</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -85,6 +86,7 @@ Members
                 <td>{{ member.gender }}</td>
                 <td>{{ member.parent_username}}</td>
                 <td>{{ member.formatted_created_at }}</td>
+                <td>{{ member.formatted_updated_at }}</td>
                 <td>
                     <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
                         data-id="{{ member.id }}">
@@ -215,7 +217,8 @@ Members
                                                         <td>${result.data.address}</td>
                                                         <td>${result.data.gender}</td>
                                                         <td>${result.data.parent_username}</td>
-                                                        <td>${result.data.created_at}</td>                                       
+                                                        <td>${result.data.created_at}</td> 
+                                                        <td>${result.data.updated_at}</td>                                                                             
                                                         <td>
                                                             <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
                                                                 data-id="{{ member.id }}">
@@ -230,7 +233,7 @@ Members
                             }
                             else {
                                 $('#add-data-message').hide();
-                                $('table tbody').append(new_row);
+                                $('table tbody').prepend(new_row);
                                 updateMemberCount();
                             }
                             $('#success').text(result.message).show();

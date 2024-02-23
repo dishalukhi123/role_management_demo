@@ -1,17 +1,17 @@
-{% if request.path != '/login/' and request.path != '/signup/' %}
+{% if request.session.user_id %}
 <header>
     <nav class="navbar navbar-inverse justify-content-center jus">
         <div class="container-fluid">
-
             <div class="collapse navbar-collapse" id="myNavbar">
                 <ul class="nav navbar-nav">
-                    <li><a style="font-weight: 900" href="/"><span class="glyphicon glyphicon-home"></span> Home
-                        </a></li>
+                    <li><a style="font-weight: 900" href="/"><span class="glyphicon glyphicon-home"></span> Home</a>
+                    </li>
                     {% if user.is_superuser %}
                     <li><a href="/admins/">ADMINS</a></li>
-                    {% endif %}
-                    {% if not user.is_superuser %}
+                    {% else %}
+                    {% if not user_member_role %}
                     <li><a href="/members/">MEMBERS</a></li>
+                    {% endif %}
                     {% endif %}
                 </ul>
                 <ul class="nav navbar-nav navbar-right ">
