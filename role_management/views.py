@@ -12,6 +12,24 @@ from .decorators import admin_required, member_required
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from rest_framework import serializers
+
+# class AdminSerializer(serializers.Serializer):
+#     admin_id = serializers.IntegerField()
+#     email = serializers.EmailField()
+#     first_name = serializers.CharField(max_length=100)
+#     last_name = serializers.CharField(max_length=100)
+#     username = serializers.CharField(max_length=100)
+#     address = serializers.CharField(max_length=255)
+#     gender = serializers.CharField(max_length=10)
+#     created_at = serializers.DateTimeField()
+#     updated_at = serializers.DateTimeField()
+
+#     def to_representation(self, instance):
+#         data = super().to_representation(instance)
+#         data['formatted_created_at'] = instance.formatted_created_at()
+#         data['formatted_updated_at'] = instance.formatted_updated_at()
+#         return data
 
 
 
@@ -205,16 +223,21 @@ class AdminView(View):
                 parent_id=current_user.id, roles__role_name="ADMIN"
             ).order_by("-id")
 
-        paginator = Paginator(admins, 8)  
-        page_number = request.GET.get('page')
+        admin_count = admins.count()
+
+
+        paginator = Paginator(admins, 9)  # Show 10 admins per page
+        page = request.GET.get('page')
         try:
-            admins = paginator.page(page_number)
+            admins = paginator.page(page)
         except PageNotAnInteger:
+            # If page is not an integer, deliver first page.
             admins = paginator.page(1)
         except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
             admins = paginator.page(paginator.num_pages)
 
-        return render(request, "admins.html", {"admins": admins})
+        return render(request, "admins.html", {"admins": admins, "admin_count" : admin_count})
 
 
 class EditAdminView(View):
@@ -414,7 +437,6 @@ class LoginView(View):
                 messages.error(request, "User not logged in successfully")
         else:
             messages.error(request, "Incorrect password.")
-            return redirect("login")
 
 
 class HomeView(View):
