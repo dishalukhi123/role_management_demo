@@ -61,10 +61,10 @@ class AddAdminView(View):
 
         if " " in username:
             return sendResponse(500, "Username cannot use space")
-        elif " " in first_name or " " in last_name:
-            return sendResponse(500, "Name cannot use space")
-        elif not first_name.isalpha() or not last_name.isalpha():
-            return sendResponse(500, "You can only use alphabets in the first name")
+        elif " " in first_name :
+            return sendResponse(500, "First name cannot use space")
+        elif not first_name.isalpha() :
+            return sendResponse(500, "First name can only contain alphabets")
         elif password != confirm_password:
             return sendResponse(500, "Password does not match")
 
@@ -139,14 +139,19 @@ class AddMemberView(View):
 
             if " " in username:
                 return sendResponse(500, "Username cannot contain spaces")
-            elif " " in first_name or " " in last_name:
-                return sendResponse(500, "Name cannot contain spaces")
-            elif not first_name.isalpha() or not last_name.isalpha():
+            elif " " in first_name:
+                return sendResponse(500, "First name cannot contain spaces")
+            elif not first_name.isalpha():
                 return sendResponse(
-                    500, "First and last names can only contain alphabets"
+                    500, "First name can only contain alphabets"
                 )
             elif password != confirm_password:
                 return sendResponse(500, "Password does not match")
+            
+            if Users.objects.filter(username=username).exists():
+                return sendResponse(500, "Username already exists")
+            elif Users.objects.filter(email=email).exists():
+                return sendResponse(500, "Email already exists")
 
 
             hashed_password = make_password(password)
@@ -200,14 +205,14 @@ class AdminView(View):
                 parent_id=current_user.id, roles__role_name="ADMIN"
             ).order_by("-id")
 
-        # paginator = Paginator(admins, 10)  
-        # page_number = request.GET.get('page')
-        # try:
-        #     admins = paginator.page(page_number)
-        # except PageNotAnInteger:
-        #     admins = paginator.page(1)
-        # except EmptyPage:
-        #     admins = paginator.page(paginator.num_pages)
+        paginator = Paginator(admins, 8)  
+        page_number = request.GET.get('page')
+        try:
+            admins = paginator.page(page_number)
+        except PageNotAnInteger:
+            admins = paginator.page(1)
+        except EmptyPage:
+            admins = paginator.page(paginator.num_pages)
 
         return render(request, "admins.html", {"admins": admins})
 

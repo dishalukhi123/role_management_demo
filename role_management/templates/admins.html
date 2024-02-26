@@ -54,6 +54,11 @@ Admin
     </div>
     {% include 'modal_form.html' %}
     <br />
+    <form>
+        <div class="form-group">
+            <input class="form-control" id="myInput" type="text" placeholder="Search..">
+        </div>
+    </form>
     <table class="table table-bordered table-striped">
         <thead>
             <tr>
@@ -67,10 +72,11 @@ Admin
                 <th>Created</th>
                 <th>Updated</th>
                 <th>Action</th>
+                <th>Delete Member</th>
                 <th>Add Member</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="table">
             {% for admin in admins %}
             <tr id="tabel-set" data-row-id="{{ admin.id }}">
                 <td>{{ admin.id }}</td>
@@ -89,17 +95,23 @@ Admin
                     </button>
                 </td>
                 <td>
+                    <button class="btn btn-danger delete-btn" data-id="{{ admin.id }}" id="Delete-button">Delete
+                    </button>
+                </td>
+                <td>
                     <button class="btn btn-primary  add-member-btn" data-id="{{admin.id}}">Members
                     </button>
                 </td>
-
             </tr>
             {% endfor %}
+            <tr id="noResultsMessage" style="display: none;">
+                <td colspan="12" class="text-center">No members found.</td>
+            </tr>
         </tbody>
     </table>
     {% endif %}
-    
-<!--     
+
+
     <nav aria-label="Page navigation">
         <ul class="pagination">
             {% if admins.has_previous %}
@@ -114,7 +126,7 @@ Admin
             <li class="page-item"><a class="page-link" href="?page={{ admins.next_page_number }}">Next</a></li>
             {% endif %}
         </ul>
-    </nav> -->
+    </nav>
 </div>
 {% endblock %}
 
@@ -302,6 +314,59 @@ Admin
             });
         });
 
+
+        $('.delete-btn').on('click', function () {
+            var adminId = $(this).data('id');
+
+            $.ajax({
+                type: 'POST',
+                url: `/admins/${adminId}`,
+                success: function (result) {
+                    if (result.code == 200) {
+                        $('#tabel-set[data-row-id="' + adminId + '"]').remove();
+                        $('#admin-success').text(result.message).show().fadeOut(3000);
+                    } else {
+                        $('#admin-success').text(result.message).show().fadeOut(3000);
+                    }
+                },
+                error: function (error) {
+                    $('#admin-success').text('Something went wrong. Please try again later.').show().fadeOut(3000);
+                }
+            });
+        });
+
+
+      function filterTable(searchText) {
+        var found = false;
+        $("#table tr").filter(function () {
+            var username = $(this).find('td:nth-child(2)').text().toLowerCase().trim();
+            var email = $(this).find('td:nth-child(3)').text().toLowerCase().trim();
+            var matchUsername = username.indexOf(searchText) > -1;
+            var matchEmail = email.indexOf(searchText) > -1;
+            var isVisible = matchUsername || matchEmail;
+            $(this).toggle(isVisible);
+            if (isVisible) {
+                found = true;
+            }
+        });
+        if (!found) {
+            $('#noResultsMessage').show();
+        } else {
+            $('#noResultsMessage').hide();
+        }
+    }
+
+    // Bind filter function to keyup event on search input
+    $('#myInput').on('keyup', function () {
+        var searchText = $(this).val().toLowerCase().trim();
+        filterTable(searchText);
+    });
+
+    // Event delegation for dynamically added elements
+    $(document).on('keyup', '#myInput', function () {
+        var searchText = $(this).val().toLowerCase().trim();
+        filterTable(searchText);
+    });
 
         $('body').on('click', '.add-member-btn', function () {
             let $row = $(this).closest('tr');

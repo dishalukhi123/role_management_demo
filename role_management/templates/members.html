@@ -177,7 +177,6 @@ Members
         $('#save-btn').on('click', function (e) {
             e.preventDefault();
             if ($("#form").valid()) {
-                trimInputValues();
                 member_id = $('#member_id').val();
                 if (!member_id) {
                     var data = {
