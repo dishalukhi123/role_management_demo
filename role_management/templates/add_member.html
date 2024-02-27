@@ -30,7 +30,7 @@ Members
 
 {% block content %}
 <div data-admin-id="{{admin_id}}"></div>
-<div class="container">
+<div class="container-fluid">
     <div class="alert alert-info" role="alert" id="info" hidden></div>
     <div class="alert alert-success" role="alert" id="admin-success" hidden>
     </div>
@@ -92,6 +92,9 @@ Members
                         data-id="{{ member.id }}">
                         <span class="glyphicon glyphicon-pencil"></span>
                     </button>
+                    <button class="btn btn-danger delete-btn " data-id="{{ member.id }}">
+                        <span class="glyphicon glyphicon-trash"></span>
+                    </button>
                 </td>
 
             </tr>
@@ -109,6 +112,7 @@ Members
 {% endblock %}
 
 {% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
     let member_id = null
@@ -224,6 +228,9 @@ Members
                                                                 data-id="{{ member.id }}">
                                                                 <span class="glyphicon glyphicon-pencil"></span>
                                                             </button>
+                                                            <button class="btn btn-danger delete-btn " data-id="{{ member.id }}">
+                                                                <span class="glyphicon glyphicon-trash"></span>
+                                                            </button>
                                                         </td>
                                                         </tr>`;
 
@@ -294,6 +301,52 @@ Members
                         $('#exampleModal').toggle('show');
                     }
                 },
+            });
+        });
+
+
+        $('body').on('click', '.delete-btn', function () {
+            let memberId = $(this).data('id');
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'You will not be able to recover this admin!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'DELETE',
+                        url: `/members/${memberId}/`,
+                        success: function (response) {
+                            if (response.code === 200) {
+                                $(`#tabel-set[data-row-id="${memberId}"]`).remove();
+                                Swal.fire(
+                                    'Deleted!',
+                                    'The admin has been deleted.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    response.message,
+                                    'error'
+                                );
+                            }
+                        },
+                        error: function (error) {
+                            Swal.fire(
+                                'Error!',
+                                'An error occurred while processing your request. Please try again later.',
+                                'error'
+                            );
+                        }
+                    });
+                }
             });
         });
 

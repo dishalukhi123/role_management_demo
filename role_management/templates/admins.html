@@ -23,14 +23,12 @@ Admin
 
     .admincount {
         margin-top: 37px;
-
-
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container-fluid">
     <div class="alert alert-info" role="alert" id="info" hidden></div>
     <div class="alert alert-success" role="alert" id="admin-success" hidden>
     </div>
@@ -57,7 +55,8 @@ Admin
     <br />
     <form>
         <div class="form-group">
-            <input class="form-control" id="myInput" type="text" placeholder="Search..">
+            <label>Search :</label>
+            <input class="form-control" id="myInput" type="text" placeholder="Search.." style="width: 266px;">
         </div>
     </form>
     <table class="table table-bordered table-striped">
@@ -93,6 +92,9 @@ Admin
                         data-target="#exampleModal" data-id="{{ admin.id }}">
                         <span class="glyphicon glyphicon-pencil"></span>
                     </button>
+                    <button class="btn btn-danger delete-btn " data-id="{{ admin.id }}">
+                        <span class="glyphicon glyphicon-trash"></span>
+                    </button>
                 </td>
                 <td>
                     <button class="btn btn-primary  add-member-btn" data-id="{{admin.id}}">Members
@@ -107,13 +109,9 @@ Admin
         </tbody>
     </table>
     {% endif %}
-    {% if admins.has_other_pages %}
     <nav aria-label="Page navigation example">
         <ul class="pagination justify-content-end">
             {% if admins.has_previous %}
-            <!-- <li class="page-item">
-            <a class="page-link" href="?page=1" tabindex="-1">First</a>
-          </li> -->
             <li class="page-item">
                 <a class="page-link" href="?page={{ admins.previous_page_number }}">Previous</a>
             </li>
@@ -129,18 +127,14 @@ Admin
             <li class="page-item">
                 <a class="page-link" href="?page={{ admins.next_page_number }}">Next</a>
             </li>
-            <!-- <li class="page-item">
-            <a class="page-link" href="?page={{ admins.paginator.num_pages }}">Last</a>
-          </li> -->
             {% endif %}
         </ul>
     </nav>
-    {% endif %}
-
 </div>
 {% endblock %}
 
 {% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
     let admin_id = null
@@ -256,6 +250,9 @@ Admin
                                                                 data-id="{{ admin.id }}">
                                                                 <span class="glyphicon glyphicon-pencil"></span>
                                                             </button>
+                                                            <button class="btn btn-danger delete-btn " data-id="{{ admin.id }}">
+                                                                <span class="glyphicon glyphicon-trash"></span>
+                                                            </button>
                                                         </td>
                                                         <td>
                                                             <button class="btn btn-primary  add-member-btn"  date-id="${result.data.admin_id}">Members
@@ -324,6 +321,7 @@ Admin
             });
         });
 
+
         $("#myInput").on("keyup", function () {
             var value = $(this).val().toLowerCase().trim();
             $("#myTable tr").filter(function () {
@@ -331,14 +329,61 @@ Admin
             });
 
 
-        if ($("#myTable tr:visible").length === 0) {
-            $("#noResultsMessage").show(); // Display message if no users are found
-        } else {
-            $("#noResultsMessage").hide(); // Hide the message if users are found
-        }
+            if ($("#myTable tr:visible").length === 0) {
+                $("#noResultsMessage").show();
+            } else {
+                $("#noResultsMessage").hide();
+            }
 
-    });
-        
+        });
+
+
+        $('body').on('click', '.delete-btn', function () {
+            let adminId = $(this).data('id');
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'You will not be able to recover this admin!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'DELETE',
+                        url: `/admins/${adminId}/`,
+                        success: function (response) {
+                            if (response.code === 200) {
+                                $(`#tabel-set[data-row-id="${adminId}"]`).remove();
+                                Swal.fire(
+                                    'Deleted!',
+                                    'The admin has been deleted.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    response.message,
+                                    'error'
+                                );
+                            }
+                        },
+                        error: function (error) {
+                            Swal.fire(
+                                'Error!',
+                                'An error occurred while processing your request. Please try again later.',
+                                'error'
+                            );
+                        }
+                    });
+                }
+            });
+        });
+
+
         $('body').on('click', '.add-member-btn', function () {
             let $row = $(this).closest('tr');
             let adminId = $row.data('row-id');
