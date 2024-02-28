@@ -1,8 +1,7 @@
 {% if request.session.user_id %}
 <header>
     <nav class="navbar navbar-inverse justify-content-center jus">
-        <div class="container-fluid">
-            <div class="collapse navbar-collapse" id="myNavbar">
+        <div class="container-fluid" id="myNavbar">
                 <ul class="nav navbar-nav">
                     <li><a style="font-weight: 900" href="/"><span class="glyphicon glyphicon-home"></span> Home</a>
                     </li>
@@ -18,7 +17,6 @@
                     <li class="active"><a style="font-weight: 900" id="logout" href="/logout/"><span
                                 class="glyphicon glyphicon-log-out"></span> Log Out</a></li>
                 </ul>
-            </div>
         </div>
     </nav>
 </header>

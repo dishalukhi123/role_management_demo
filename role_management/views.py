@@ -97,12 +97,6 @@ class AddAdminView(View):
                 message="Admin added successfully.",
                 data={
                     "admin_id": user.id,
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "username": user.username,
-                    "address": user.address,
-                    "gender": user.gender,
                     "created_at": user.formatted_created_at(),
                     "updated_at": user.formatted_updated_at(),
                 },
@@ -116,16 +110,17 @@ class AddMemberView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(member_required)
     def get(self, request, admin_id):
-        members = Users.objects.filter(parent_id=admin_id)
+        members = Users.objects.filter(parent_id=admin_id).order_by("-id")
         admin_username(members)
-        table_row = Users.objects.count()
+        member_count = members.count()
+
         return render(
             request,
             "add_member.html",
             {
                 "admin_id": admin_id,
                 "members": members,
-                "table_row" :table_row,
+                "member_count" :member_count,
             },
         )
 
@@ -155,7 +150,6 @@ class AddMemberView(View):
                 return sendResponse(500, "Username already exists")
             elif Users.objects.filter(email=email).exists():
                 return sendResponse(500, "Email already exists")
-
 
             hashed_password = make_password(password)
 
@@ -301,12 +295,6 @@ class EditAdminView(View):
                 "Admin updated successfully.",
                 data={
                     "admin_id": admin_id,
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "username": user.username,
-                    "address": user.address,
-                    "gender": user.gender,
                     "created_at": user.formatted_created_at(),
                     "updated_at": user.formatted_updated_at(),
                 },
@@ -368,12 +356,6 @@ class EditMemberView(View):
                 "Member updated successfully.",
                 data={
                     "member_id": member_id,
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "username": user.username,
-                    "address": user.address,
-                    "gender": user.gender,
                     "parent_username": parent_username,
                     "created_at": user.formatted_created_at(),
                     "updated_at": user.formatted_updated_at(),
@@ -408,6 +390,7 @@ class MemberView(View):
                 Q(gender__icontains=search_query)
             )
         admin_username(members)
+        member_count = members.count()
 
         paginator = Paginator(members, 9)
         page_number = request.GET.get('page')
@@ -425,11 +408,11 @@ class MemberView(View):
             {
                 "members": members,
                 "current_user": current_user,
+                "member_count": member_count,
             },
         )
         
     def delete(self, request, member_id):
-        print('============',member_id)
         try:
             member = Users.objects.get(id=member_id)
             member.delete()
@@ -491,7 +474,7 @@ class AddAdminMembers(View):
 
             return sendResponse(
                 code=200,
-                message="Admin added successfully.",
+                message="member added successfully.",
                 data={
                     "member_id": user.id,
                     "email": user.email,
@@ -510,7 +493,6 @@ class AddAdminMembers(View):
             return sendResponse(400, f"Error: {str(e)}")
         
     def delete(self, request, member_id):
-        print('============',member_id)
         try:
             member = Users.objects.get(id=member_id)
             member.delete()

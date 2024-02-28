@@ -22,7 +22,7 @@ Members
         margin-top: 37px;
     }
 
-    .admincount {
+    .membercount {
         margin-top: 37px;
 
     }
@@ -43,8 +43,7 @@ Members
     </div>
 
     <div class="row ">
-        <h2 id="member-count" class="col-md-6 admincount">
-            <span class="glyphicon glyphicon-user"></span> Members ({{ members.count }})
+        <h2 class="col-md-6 membercount"><span class="glyphicon glyphicon-user"></span> member ({{ member_count }})
         </h2>
         <div class="col-md-6" style="text-align: right;">
             <button type="button" class="btn btn-primary text-center add-btn" data-toggle="modal"
@@ -107,15 +106,17 @@ Members
                         <span class="glyphicon glyphicon-trash"></span>
                     </button>
                 </td>
-
             </tr>
             {% endfor %}
             {% else %}
             <div id="add-data"></div>
             <tr>
-                <td colspan="10" class="text-center" id="add-data-message">No matching records found.</td>
+                <td colspan="10" class="text-center" id="add-data-message">No records found.</td>
             </tr>
             {% endif %}
+            <tr id="noResultsMessage" style="display: none;">
+                <td colspan="12" class="text-center">No matching records found.</td>
+            </tr>
         </tbody>
     </table>
     {% endif %}
@@ -235,15 +236,15 @@ Members
                     data: data,
                     success: function (result) {
                         if (result.code == 200) {
-                            let new_row = `
-                                                    <tr id="tabel-set" data-row-id="${result.data.member_id}">
+                            const {username , email , first_name , last_name ,address ,gender} = data;
+                            let new_row = `<tr id="tabel-set" data-row-id="${result.data.member_id}">
                                                         <td>${result.data.member_id}</td>
-                                                        <td>${result.data.username}</td>
-                                                        <td>${result.data.email}</td>
-                                                        <td>${result.data.first_name}</td>
-                                                        <td>${result.data.last_name}</td>
-                                                        <td>${result.data.address}</td>
-                                                        <td>${result.data.gender}</td>
+                                                        <td>${username}</td>
+                                                        <td>${email}</td>
+                                                        <td>${first_name}</td>
+                                                        <td>${last_name}</td>
+                                                        <td>${address}</td>
+                                                        <td>${gender}</td>
                                                         <td>${result.data.parent_username}</td>
                                                         <td>${result.data.created_at}</td> 
                                                         <td>${result.data.updated_at}</td>                                         
@@ -261,8 +262,8 @@ Members
                             if (member_id) {
                                 $(`#tabel-set[data-row-id="${member_id}"]`).replaceWith(new_row);
                             } else {
+                                $('#add-data-message').hide();
                                 $('table tbody').prepend(new_row);
-                                updateMemberCount();
                             }
                             $('#success').text(result.message).show();
                             $('#success').fadeToggle(3000);
@@ -299,7 +300,7 @@ Members
             });
         }
 
-
+        
         $("#myInput").on("keyup", function () {
             handleSearch();
         });
@@ -382,6 +383,8 @@ Members
                             success: function (response) {
                                 if (response.code === 200) {
                                     $(`#tabel-set[data-row-id="${memberId}"]`).remove();
+                                    let currentCount = parseInt($('.membercount').text().match(/\d+/)[0]); 
+                                    $('.membercount').html(`<span class="glyphicon glyphicon-user"></span> Admins (${currentCount - 1})`);
                                     Swal.fire(
                                         'Deleted!',
                                         'The member has been deleted.',
@@ -411,10 +414,6 @@ Members
         });
 
 
-        function updateMemberCount() {
-            let currentCount = parseInt($('#member-count').text().match(/\d+/)[0]);
-            $('#member-count').html(`<span class="glyphicon glyphicon-user"></span>  Members (${currentCount + 1})`);
-        }
     });
 
 </script>

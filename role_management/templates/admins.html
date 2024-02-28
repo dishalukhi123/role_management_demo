@@ -28,7 +28,7 @@ Admin
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid" style="font-size: 15px;">
+<div class="container-fluid">
     <div class="alert alert-info" role="alert" id="info" hidden></div>
     <div class="alert alert-success" role="alert" id="admin-success" hidden>
     </div>
@@ -135,7 +135,7 @@ Admin
             {% endif %}
         </ul>
     </nav>
-    
+
 </div>
 {% endblock %}
 
@@ -219,7 +219,6 @@ Admin
                     gender: $('input[name="gender"]:checked').val(),
                     csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
                 };
-
                 if (!admin_id) {
                     data.password = $('#password').val().trim();
                     data.confirm_password = $('#confirm_password').val().trim();
@@ -231,18 +230,18 @@ Admin
                     data: data,
                     success: function (result) {
                         if (result.code == 200) {
+                            const {username , email , first_name , last_name ,address ,gender} = data;
                             let new_row = `
                                                     <tr id="tabel-set" data-row-id="${result.data.admin_id}">
                                                         <td>${result.data.admin_id}</td>
-                                                        <td>${result.data.username}</td>
-                                                        <td>${result.data.email}</td>
-                                                        <td>${result.data.first_name}</td>
-                                                        <td>${result.data.last_name}</td>
-                                                        <td>${result.data.address}</td>
-                                                        <td>${result.data.gender}</td>
-                                                        <td>${result.data.parent_username}</td>
+                                                        <td>${username}</td>
+                                                        <td>${email}</td>
+                                                        <td>${first_name}</td>
+                                                        <td>${last_name}</td>
+                                                        <td>${address}</td>
+                                                        <td>${gender}</td>
                                                         <td>${result.data.created_at}</td> 
-                                                        <td>${result.data.updated_at}</td>                                                                             
+                                                        <td>${result.data.updated_at}</td>                                                                            
                                                         <td>
                                                             <button class="btn btn-primary  edit-btn" id="edit-button" data-toggle="modal" data-target="#exampleModal"
                                                                 data-id="{{ admin.id }}">
@@ -284,7 +283,7 @@ Admin
             var value = $("#myInput").val().toLowerCase().trim();
             $.ajax({
                 url: window.location.pathname + '?search=' + value,
-                success: function(data) {
+                success: function (data) {
                     $('#myTable').html($(data).find('#myTable').html());
                     $('.pagination').html($(data).find('.pagination').html());
                     if ($("#myTable tr:visible").length === 0) {
@@ -302,12 +301,12 @@ Admin
         });
 
 
-        $('body').on('click', '.pagination a', function(event){
+        $('body').on('click', '.pagination a', function (event) {
             event.preventDefault();
             let pageNumber = $(this).attr('href').split('page=')[1];
             $.ajax({
                 url: window.location.pathname + '?page=' + pageNumber,
-                success: function(data) {
+                success: function (data) {
                     $('#myTable').html($(data).find('#myTable').html());
                     $('.pagination').html($(data).find('.pagination').html());
                     if ($("#myTable tr:visible").length === 0) {
@@ -343,15 +342,16 @@ Admin
 
             $.ajax({
                 type: "GET",
-                url: `/admins/${admin_id}/`,
+                url: `/admins/${admin_id}`,
                 success: function (result) {
                     if (result.code == 200) {
-                        $('#email').val(result.data.email);
-                        $('#first_name').val(result.data.first_name);
-                        $('#last_name').val(result.data.last_name);
-                        $('#username').val(result.data.username);
-                        $('#address').val(result.data.address);
-                        $('input[name="gender"][value="' + result.data.gender + '"]').prop('checked', true);
+                        var data = result.data;
+                        $('#email').val(data.email);
+                        $('#first_name').val(data.first_name);
+                        $('#last_name').val(data.last_name);
+                        $('#username').val(data.username);
+                        $('#address').val(data.address);
+                        $('input[name="gender"][value="' + data.gender + '"]').prop('checked', true);
                         $('#admin_id').val(admin_id);
                         $('#exampleModal').modal('show');
                     }
@@ -392,10 +392,12 @@ Admin
                 if (result.isConfirmed) {
                     $.ajax({
                         type: 'DELETE',
-                        url: `/admins/${adminId}`,
+                        url: `/admins/${adminId}/`,
                         success: function (response) {
                             if (response.code === 200) {
                                 $(`#tabel-set[data-row-id="${adminId}"]`).remove();
+                                let currentCount = parseInt($('.admincount').text().match(/\d+/)[0]); 
+                                $('.admincount').html(`<span class="glyphicon glyphicon-user"></span> Admins (${currentCount - 1})`);
                                 Swal.fire(
                                     'Deleted!',
                                     'The admin has been deleted.',

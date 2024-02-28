@@ -21,7 +21,7 @@ Members
         margin-top: 37px;
     }
 
-    .admincount {
+    .membercount {
         margin-top: 37px;
 
     }
@@ -43,8 +43,8 @@ Members
     </div>
 
     <div class="row ">
-        <h2 id="member-count" class="col-md-6 admincount">
-            <span class="glyphicon glyphicon-user"></span> Members ({{ members.count }})
+        <h2 id="member-count" class="col-md-6 membercount">
+            <span class="glyphicon glyphicon-user"></span> Members ({{ member_count }})
         </h2>
         <div class="col-md-6" style="text-align: right;">
             <button type="button" class="btn btn-primary text-center add-btn" data-toggle="modal"
@@ -113,7 +113,7 @@ Members
             {% else %}
             <div id="add-data"></div>
             <tr>
-                <td colspan="10" class="text-center" id="add-data-message">No matching records found.</td>
+                <td colspan="10" class="text-center" id="add-data-message">No records found.</td>
             </tr>
             {% endif %}
         </tbody>
@@ -201,7 +201,6 @@ Members
                     gender: $('input[name="gender"]:checked').val(),
                     csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
                 };
-
                 if (!member_id) {
                     data.password = $('#password').val().trim();
                     data.confirm_password = $('#confirm_password').val().trim();
@@ -213,15 +212,16 @@ Members
                     data: data,
                     success: function (result) {
                         if (result.code == 200) {
+                            const {username , email , first_name , last_name ,address ,gender} = data;
                             let new_row = `
                                                     <tr id="tabel-set" data-row-id="${result.data.member_id}">
                                                         <td>${result.data.member_id}</td>
-                                                        <td>${result.data.username}</td>
-                                                        <td>${result.data.email}</td>
-                                                        <td>${result.data.first_name}</td>
-                                                        <td>${result.data.last_name}</td>
-                                                        <td>${result.data.address}</td>
-                                                        <td>${result.data.gender}</td>
+                                                        <td>${username}</td>
+                                                        <td>${email}</td>
+                                                        <td>${first_name}</td>
+                                                        <td>${last_name}</td>
+                                                        <td>${address}</td>
+                                                        <td>${gender}</td>
                                                         <td>${result.data.parent_username}</td>
                                                         <td>${result.data.created_at}</td> 
                                                         <td>${result.data.updated_at}</td>                                       
@@ -243,7 +243,6 @@ Members
                             else {
                                 $('#add-data-message').hide();
                                 $('table tbody').prepend(new_row);
-                                updateMemberCount();
                             }
                             $('#success').text(result.message).show();
                             $('#success').fadeToggle(3000);
@@ -293,12 +292,13 @@ Members
                 url: `/members/${member_id}`,
                 success: function (result) {
                     if (result.code == 200) {
-                        $('#email').val(result.data.email);
-                        $('#first_name').val(result.data.first_name);
-                        $('#last_name').val(result.data.last_name);
-                        $('#username').val(result.data.username);
-                        $('#address').val(result.data.address);
-                        $('input[name="gender"][value="' + result.data.gender + '"]').prop('checked', true);
+                        var data = result.data;
+                        $('#email').val(data.email);
+                        $('#first_name').val(data.first_name);
+                        $('#last_name').val(data.last_name);
+                        $('#username').val(data.username);
+                        $('#address').val(data.address);
+                        $('input[name="gender"][value="' + data.gender + '"]').prop('checked', true);
                         $('#member_id').val(member_id);
                         $('#exampleModal').toggle('show');
                     }
@@ -327,6 +327,8 @@ Members
                         success: function (response) {
                             if (response.code === 200) {
                                 $(`#tabel-set[data-row-id="${member_id}"]`).remove();
+                                let currentCount = parseInt($('.membercount').text().match(/\d+/)[0]); 
+                                $('.membercount').html(`<span class="glyphicon glyphicon-user"></span> Admins (${currentCount - 1})`);
                                 Swal.fire(
                                     'Deleted!',
                                     'The admin has been deleted.',
@@ -353,11 +355,6 @@ Members
             });
         });
 
-
-        function updateMemberCount() {
-            let currentCount = parseInt($('#member-count').text().match(/\d+/)[0]);
-            $('#member-count').html(`<span class="glyphicon glyphicon-user"></span>  Members (${currentCount + 1})`);
-        }
     });
 
 </script>
