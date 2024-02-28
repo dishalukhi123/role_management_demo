@@ -13,24 +13,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import serializers
-
-# class AdminSerializer(serializers.Serializer):
-#     admin_id = serializers.IntegerField()
-#     email = serializers.EmailField()
-#     first_name = serializers.CharField(max_length=100)
-#     last_name = serializers.CharField(max_length=100)
-#     username = serializers.CharField(max_length=100)
-#     address = serializers.CharField(max_length=255)
-#     gender = serializers.CharField(max_length=10)
-#     created_at = serializers.DateTimeField()
-#     updated_at = serializers.DateTimeField()
-
-#     def to_representation(self, instance):
-#         data = super().to_representation(instance)
-#         data['formatted_created_at'] = instance.formatted_created_at()
-#         data['formatted_updated_at'] = instance.formatted_updated_at()
-#         return data
-
+from django.db.models import Q
 
 
 def is_superuser(user):
@@ -63,7 +46,7 @@ def admin_username(members):
         else:
             member.parent_username = ""
 
-
+# View for adding an admin
 class AddAdminView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(admin_required)
@@ -128,19 +111,21 @@ class AddAdminView(View):
         except Exception as e:
             return sendResponse(400, f"Error: {str(e)}")
 
-
+# View for adding a member
 class AddMemberView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(member_required)
     def get(self, request, admin_id):
         members = Users.objects.filter(parent_id=admin_id)
         admin_username(members)
+        table_row = Users.objects.count()
         return render(
             request,
             "add_member.html",
             {
                 "admin_id": admin_id,
                 "members": members,
+                "table_row" :table_row,
             },
         )
 
@@ -208,8 +193,19 @@ class AddMemberView(View):
             )
         except Exception as e:
             return sendResponse(400, f"Error: {str(e)}")
-
-
+        
+    def delete(self, request, member_id):
+        print('============',member_id)
+        try:
+            member = Users.objects.get(id=member_id)
+            member.delete()
+            return sendResponse(code=200, message="member deleted successfully.")
+        except Users.DoesNotExist:
+            return sendResponse(code=404, message="member does not exist.")
+        except Exception as e:
+            return sendResponse(code=400, message=f"Error: {str(e)}")
+    
+# View for listing admins
 class AdminView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(admin_required)
@@ -223,23 +219,42 @@ class AdminView(View):
                 parent_id=current_user.id, roles__role_name="ADMIN"
             ).order_by("-id")
 
+        search_query = request.GET.get('search')
+        if search_query:
+            admins = admins.filter(
+                Q(username__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(address__icontains=search_query) |
+                Q(gender__icontains=search_query)
+            )
+
         admin_count = admins.count()
 
-
-        paginator = Paginator(admins, 9)  # Show 10 admins per page
+        paginator = Paginator(admins, 9)
         page = request.GET.get('page')
         try:
             admins = paginator.page(page)
         except PageNotAnInteger:
-            # If page is not an integer, deliver first page.
             admins = paginator.page(1)
         except EmptyPage:
-            # If page is out of range (e.g. 9999), deliver last page of results.
             admins = paginator.page(paginator.num_pages)
 
         return render(request, "admins.html", {"admins": admins, "admin_count" : admin_count})
 
 
+    def delete(self, request, admin_id):
+        try:
+            admin = Users.objects.get(id=admin_id)
+            admin.delete()
+            return sendResponse(code=200, message="Admin deleted successfully.")
+        except Users.DoesNotExist:
+            return sendResponse(code=404, message="Admin does not exist.")
+        except Exception as e:
+            return sendResponse(code=400, message=f"Error: {str(e)}")
+
+# View for editing admin details
 class EditAdminView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(admin_required)
@@ -299,7 +314,7 @@ class EditAdminView(View):
         except Users.DoesNotExist:
             return sendResponse(404, "Admin not found")
 
-
+# View for editing members details
 class EditMemberView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(member_required)
@@ -368,7 +383,7 @@ class EditMemberView(View):
         except Users.DoesNotExist:
             return sendResponse(404, "Member not found")
 
-
+# View for listing members
 class MemberView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(member_required)
@@ -382,7 +397,27 @@ class MemberView(View):
                 parent_id=current_user.id, roles__role_name="MEMBER"
             ).order_by("-id")
 
+        search_query = request.GET.get('search')
+        if search_query:
+            members = members.filter(
+                Q(username__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(address__icontains=search_query) |
+                Q(gender__icontains=search_query)
+            )
         admin_username(members)
+
+        paginator = Paginator(members, 9)
+        page_number = request.GET.get('page')
+        try:
+            members = paginator.page(page_number)
+        except PageNotAnInteger:
+            members = paginator.page(1)
+        except EmptyPage:
+            members = paginator.page(paginator.num_pages)
+
 
         return render(
             request,
@@ -392,14 +427,106 @@ class MemberView(View):
                 "current_user": current_user,
             },
         )
+        
+    def delete(self, request, member_id):
+        print('============',member_id)
+        try:
+            member = Users.objects.get(id=member_id)
+            member.delete()
+            return sendResponse(code=200, message="member deleted successfully.")
+        except Users.DoesNotExist:
+            return sendResponse(code=404, message="member does not exist.")
+        except Exception as e:
+            return sendResponse(code=400, message=f"Error: {str(e)}")
+    
+# View for admin members
+class AddAdminMembers(View):
+    @method_decorator(login_required(login_url="login"))
+    @method_decorator(member_required)
+    def get(self, request):
+        return render(request, "add_member.html")
+    def post(self, request):
+        email = request.POST.get("email")
+        first_name = request.POST.get("first_name")
+        last_name = request.POST.get("last_name")
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        confirm_password = request.POST.get("confirm_password")
+        address = request.POST.get("address")
+        gender = request.POST.get("gender")
 
+        if " " in username:
+            return sendResponse(500, "Username cannot use space")
+        elif " " in first_name :
+            return sendResponse(500, "First name cannot use space")
+        elif not first_name.isalpha() :
+            return sendResponse(500, "First name can only contain alphabets")
+        elif password != confirm_password:
+            return sendResponse(500, "Password does not match")
 
+        if Users.objects.filter(username=username).exists():
+            return sendResponse(500, "Username already exists")
+        elif Users.objects.filter(email=email).exists():
+            return sendResponse(500, "Email already exists")
+
+        current_user = request.user
+        try:
+            hashed_password = make_password(password)
+            user = Users.objects.create(
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                username=username,
+                password=hashed_password,
+                address=address,
+                gender=gender,
+                parent_id=current_user.id,
+                created_at=timezone.now(),
+            )
+
+            member_role = Role.objects.get(role_name="MEMBER")
+            user.roles.add(member_role)
+            parent_user = Users.objects.filter(id=current_user.id).first()
+            parent_username = parent_user.username if parent_user else ""
+
+            return sendResponse(
+                code=200,
+                message="Admin added successfully.",
+                data={
+                    "member_id": user.id,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "username": user.username,
+                    "address": user.address,
+                    "gender": user.gender,
+                    "parent_username": parent_username,
+                    "created_at": user.formatted_created_at(),
+                    "updated_at": user.formatted_updated_at(),
+                },
+            )
+
+        except Exception as e:
+            return sendResponse(400, f"Error: {str(e)}")
+        
+    def delete(self, request, member_id):
+        print('============',member_id)
+        try:
+            member = Users.objects.get(id=member_id)
+            member.delete()
+            return sendResponse(code=200, message="member deleted successfully.")
+        except Users.DoesNotExist:
+            return sendResponse(code=404, message="member does not exist.")
+        except Exception as e:
+            return sendResponse(code=400, message=f"Error: {str(e)}")
+
+# View for handling user logout
 class LogoutView(View):
     def get(self, request):
         logout(request)
         return redirect("login")
 
-
+# View for handling user login
 class LoginView(View):
     def get(self, request):
         if request.user.is_authenticated:
@@ -437,8 +564,9 @@ class LoginView(View):
                 messages.error(request, "User not logged in successfully")
         else:
             messages.error(request, "Incorrect password.")
+            return redirect("login")
 
-
+# View for home page
 class HomeView(View):
     @method_decorator(login_required(login_url="login"))
     def get(self, request):
@@ -451,7 +579,7 @@ class HomeView(View):
             {"user_first_name": user_first_name , "user_member_role" : user_member_role},
         )
 
-
+# View for user registration
 class SignupView(View):
     def get(self, request):
         return render(request, "signup.html", {})

@@ -23,14 +23,12 @@ Admin
 
     .admincount {
         margin-top: 37px;
-
-
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container-fluid" style="font-size: 15px;">
     <div class="alert alert-info" role="alert" id="info" hidden></div>
     <div class="alert alert-success" role="alert" id="admin-success" hidden>
     </div>
@@ -46,7 +44,7 @@ Admin
     <div class="row ">
         <h2 class="col-md-6 admincount"><span class="glyphicon glyphicon-user"></span> Admins ({{ admin_count }})
         </h2>
-        <div class="col-md-6" style="text-align: right;">
+        <div class="col-md-6" style="text-align: right; font-size: 15px;">
             <button type="button" class="btn btn-primary text-center add-btn" data-toggle="modal"
                 data-target="#exampleModal">
                 Add admin </button>
@@ -55,11 +53,17 @@ Admin
     </div>
     {% include 'modal_form.html' %}
     <br />
-    <form>
-        <div class="form-group">
-            <input class="form-control" id="myInput" type="text" placeholder="Search..">
+    <div class="row">
+        <div class="col-md-12" style="text-align: right;">
+            <form class="form-inline">
+                <div class="form-group">
+                    <label for="myInput" class="mr-2">Search :</label>
+                    <input class="form-control" id="myInput" type="text" placeholder="Search.." style="width: 400px;">
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
+    <br />
     <table class="table table-bordered table-striped">
         <thead>
             <tr>
@@ -93,6 +97,9 @@ Admin
                         data-target="#exampleModal" data-id="{{ admin.id }}">
                         <span class="glyphicon glyphicon-pencil"></span>
                     </button>
+                    <button class="btn btn-danger delete-btn " data-id="{{ admin.id }}">
+                        <span class="glyphicon glyphicon-trash"></span>
+                    </button>
                 </td>
                 <td>
                     <button class="btn btn-primary  add-member-btn" data-id="{{admin.id}}">Members
@@ -102,18 +109,14 @@ Admin
             </tr>
             {% endfor %}
             <tr id="noResultsMessage" style="display: none;">
-                <td colspan="12" class="text-center">No members found.</td>
+                <td colspan="12" class="text-center">No matching records found.</td>
             </tr>
         </tbody>
     </table>
     {% endif %}
-    {% if admins.has_other_pages %}
     <nav aria-label="Page navigation example">
         <ul class="pagination justify-content-end">
             {% if admins.has_previous %}
-            <!-- <li class="page-item">
-            <a class="page-link" href="?page=1" tabindex="-1">First</a>
-          </li> -->
             <li class="page-item">
                 <a class="page-link" href="?page={{ admins.previous_page_number }}">Previous</a>
             </li>
@@ -129,18 +132,15 @@ Admin
             <li class="page-item">
                 <a class="page-link" href="?page={{ admins.next_page_number }}">Next</a>
             </li>
-            <!-- <li class="page-item">
-            <a class="page-link" href="?page={{ admins.paginator.num_pages }}">Last</a>
-          </li> -->
             {% endif %}
         </ul>
     </nav>
-    {% endif %}
-
+    
 </div>
 {% endblock %}
 
 {% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
     let admin_id = null
@@ -210,28 +210,19 @@ Admin
             e.preventDefault();
             if ($("#form").valid()) {
                 admin_id = $('#admin_id').val();
+                var data = {
+                    email: $('#email').val().trim(),
+                    first_name: $('#first_name').val().trim(),
+                    last_name: $('#last_name').val().trim(),
+                    username: $('#username').val().trim(),
+                    address: $('#address').val().trim(),
+                    gender: $('input[name="gender"]:checked').val(),
+                    csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                };
+
                 if (!admin_id) {
-                    var data = {
-                        email: $('#email').val().trim(),
-                        first_name: $('#first_name').val().trim(),
-                        last_name: $('#last_name').val().trim(),
-                        username: $('#username').val().trim(),
-                        password: $('#password').val().trim(),
-                        confirm_password: $('#confirm_password').val().trim(),
-                        address: $('#address').val().trim(),
-                        gender: $('input[name="gender"]:checked').val(),
-                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-                    };
-                } else {
-                    var data = {
-                        email: $('#email').val().trim(),
-                        first_name: $('#first_name').val().trim(),
-                        last_name: $('#last_name').val().trim(),
-                        username: $('#username').val().trim(),
-                        address: $('#address').val().trim(),
-                        gender: $('input[name="gender"]:checked').val(),
-                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-                    }
+                    data.password = $('#password').val().trim();
+                    data.confirm_password = $('#confirm_password').val().trim();
                 }
 
                 $.ajax({
@@ -241,7 +232,7 @@ Admin
                     success: function (result) {
                         if (result.code == 200) {
                             let new_row = `
-                                <tr id="tabel-set" data-row-id="${result.data.admin_id}">
+                                                    <tr id="tabel-set" data-row-id="${result.data.admin_id}">
                                                         <td>${result.data.admin_id}</td>
                                                         <td>${result.data.username}</td>
                                                         <td>${result.data.email}</td>
@@ -249,12 +240,16 @@ Admin
                                                         <td>${result.data.last_name}</td>
                                                         <td>${result.data.address}</td>
                                                         <td>${result.data.gender}</td>
-                                                        <td>${result.data.created_at}</td>
+                                                        <td>${result.data.parent_username}</td>
+                                                        <td>${result.data.created_at}</td> 
                                                         <td>${result.data.updated_at}</td>                                                                             
                                                         <td>
                                                             <button class="btn btn-primary  edit-btn" id="edit-button" data-toggle="modal" data-target="#exampleModal"
                                                                 data-id="{{ admin.id }}">
                                                                 <span class="glyphicon glyphicon-pencil"></span>
+                                                            </button>
+                                                            <button class="btn btn-danger delete-btn " data-id="{{ admin.id }}">
+                                                                <span class="glyphicon glyphicon-trash"></span>
                                                             </button>
                                                         </td>
                                                         <td>
@@ -271,6 +266,7 @@ Admin
                             $('#success').fadeToggle(3000);
                             $('#exampleModal').modal('hide');
                             $('.modal-backdrop').remove();
+
                         } else {
                             $('#error').text(result.message).show();
                             $('#error').fadeToggle(3000);
@@ -282,6 +278,45 @@ Admin
                     }
                 });
             }
+        });
+
+        function handleSearch() {
+            var value = $("#myInput").val().toLowerCase().trim();
+            $.ajax({
+                url: window.location.pathname + '?search=' + value,
+                success: function(data) {
+                    $('#myTable').html($(data).find('#myTable').html());
+                    $('.pagination').html($(data).find('.pagination').html());
+                    if ($("#myTable tr:visible").length === 0) {
+                        $("#noResultsMessage").show();
+                    } else {
+                        $("#noResultsMessage").hide();
+                    }
+                }
+            });
+        }
+
+
+        $("#myInput").on("keyup", function () {
+            handleSearch();
+        });
+
+
+        $('body').on('click', '.pagination a', function(event){
+            event.preventDefault();
+            let pageNumber = $(this).attr('href').split('page=')[1];
+            $.ajax({
+                url: window.location.pathname + '?page=' + pageNumber,
+                success: function(data) {
+                    $('#myTable').html($(data).find('#myTable').html());
+                    $('.pagination').html($(data).find('.pagination').html());
+                    if ($("#myTable tr:visible").length === 0) {
+                        $("#noResultsMessage").show();
+                    } else {
+                        $("#noResultsMessage").hide();
+                    }
+                }
+            });
         });
 
 
@@ -308,7 +343,7 @@ Admin
 
             $.ajax({
                 type: "GET",
-                url: `/admins/${admin_id}`,
+                url: `/admins/${admin_id}/`,
                 success: function (result) {
                     if (result.code == 200) {
                         $('#email').val(result.data.email);
@@ -324,6 +359,7 @@ Admin
             });
         });
 
+
         $("#myInput").on("keyup", function () {
             var value = $(this).val().toLowerCase().trim();
             $("#myTable tr").filter(function () {
@@ -331,14 +367,61 @@ Admin
             });
 
 
-        if ($("#myTable tr:visible").length === 0) {
-            $("#noResultsMessage").show(); // Display message if no users are found
-        } else {
-            $("#noResultsMessage").hide(); // Hide the message if users are found
-        }
+            if ($("#myTable tr:visible").length === 0) {
+                $("#noResultsMessage").show();
+            } else {
+                $("#noResultsMessage").hide();
+            }
 
-    });
-        
+        });
+
+
+        $('body').on('click', '.delete-btn', function () {
+            let adminId = $(this).data('id');
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'You will not be able to recover this admin!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'DELETE',
+                        url: `/admins/${adminId}`,
+                        success: function (response) {
+                            if (response.code === 200) {
+                                $(`#tabel-set[data-row-id="${adminId}"]`).remove();
+                                Swal.fire(
+                                    'Deleted!',
+                                    'The admin has been deleted.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    response.message,
+                                    'error'
+                                );
+                            }
+                        },
+                        error: function (error) {
+                            Swal.fire(
+                                'Error!',
+                                'An error occurred while processing your request. Please try again later.',
+                                'error'
+                            );
+                        }
+                    });
+                }
+            });
+        });
+
+
         $('body').on('click', '.add-member-btn', function () {
             let $row = $(this).closest('tr');
             let adminId = $row.data('row-id');

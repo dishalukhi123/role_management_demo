@@ -30,7 +30,7 @@ Members
 
 {% block content %}
 <div data-admin-id="{{admin_id}}"></div>
-<div class="container">
+<div class="container-fluid">
     <div class="alert alert-info" role="alert" id="info" hidden></div>
     <div class="alert alert-success" role="alert" id="admin-success" hidden>
     </div>
@@ -56,6 +56,17 @@ Members
 
     {% include 'modal_form.html' %}
 
+    <br />
+    <div class="row">
+        <div class="col-md-12" style="text-align: right;">
+            <form class="form-inline">
+                <div class="form-group">
+                    <label for="myInput" class="mr-2">Search :</label>
+                    <input class="form-control" id="myInput" type="text" placeholder="Search.." style="width: 400px;">
+                </div>
+            </form>
+        </div>
+    </div>
     <br />
     <table id="add-data" class="table table-bordered table-striped">
         <thead>
@@ -92,6 +103,9 @@ Members
                         data-id="{{ member.id }}">
                         <span class="glyphicon glyphicon-pencil"></span>
                     </button>
+                    <button class="btn btn-danger delete-btn " data-id="{{ member.id }}">
+                        <span class="glyphicon glyphicon-trash"></span>
+                    </button>
                 </td>
 
             </tr>
@@ -99,7 +113,7 @@ Members
             {% else %}
             <div id="add-data"></div>
             <tr>
-                <td colspan="10" class="text-center" id="add-data-message">No members found.</td>
+                <td colspan="10" class="text-center" id="add-data-message">No matching records found.</td>
             </tr>
             {% endif %}
         </tbody>
@@ -109,6 +123,7 @@ Members
 {% endblock %}
 
 {% block js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
     let member_id = null
@@ -177,28 +192,19 @@ Members
             e.preventDefault();
             if ($("#form").valid()) {
                 member_id = $('#member_id').val();
+                var data = {
+                    email: $('#email').val().trim(),
+                    first_name: $('#first_name').val().trim(),
+                    last_name: $('#last_name').val().trim(),
+                    username: $('#username').val().trim(),
+                    address: $('#address').val().trim(),
+                    gender: $('input[name="gender"]:checked').val(),
+                    csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                };
+
                 if (!member_id) {
-                    var data = {
-                        email: $('#email').val().trim(),
-                        first_name: $('#first_name').val().trim(),
-                        last_name: $('#last_name').val().trim(),
-                        username: $('#username').val().trim(),
-                        password: $('#password').val().trim(),
-                        confirm_password: $('#confirm_password').val().trim(),
-                        address: $('#address').val().trim(),
-                        gender: $('input[name="gender"]:checked').val(),
-                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-                    };
-                } else {
-                    var data = {
-                        email: $('#email').val().trim(),
-                        first_name: $('#first_name').val().trim(),
-                        last_name: $('#last_name').val().trim(),
-                        username: $('#username').val().trim(),
-                        address: $('#address').val().trim(),
-                        gender: $('input[name="gender"]:checked').val(),
-                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-                    }
+                    data.password = $('#password').val().trim();
+                    data.confirm_password = $('#confirm_password').val().trim();
                 }
 
                 $.ajax({
@@ -218,14 +224,17 @@ Members
                                                         <td>${result.data.gender}</td>
                                                         <td>${result.data.parent_username}</td>
                                                         <td>${result.data.created_at}</td> 
-                                                        <td>${result.data.updated_at}</td>                                                                             
+                                                        <td>${result.data.updated_at}</td>                                       
                                                         <td>
                                                             <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
                                                                 data-id="{{ member.id }}">
                                                                 <span class="glyphicon glyphicon-pencil"></span>
                                                             </button>
+                                                            <button class="btn btn-danger delete-btn " data-id="{{ member.id }}">
+                                                                <span class="glyphicon glyphicon-trash"></span>
+                                                            </button>
                                                         </td>
-                                                        </tr>`;
+                                                    </tr>`;
 
 
                             if (member_id) {
@@ -294,6 +303,53 @@ Members
                         $('#exampleModal').toggle('show');
                     }
                 },
+            });
+        });
+
+
+        $('body').on('click', '.delete-btn', function () {
+            member_id = $(this).data('id');
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'You will not be able to recover this admin!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'DELETE',
+                        url: `/members/${member_id}/`,
+                        success: function (response) {
+                            if (response.code === 200) {
+                                $(`#tabel-set[data-row-id="${member_id}"]`).remove();
+                                Swal.fire(
+                                    'Deleted!',
+                                    'The admin has been deleted.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    response.message,
+                                    'error'
+                                );
+                            }
+                        },
+                        error: function (error) {
+                            Swal.fire(
+                                'Error!',
+                                'An error occurred while processing your request. Please try again later.',
+                                'error'
+                            );
+                        }
+                    });
+
+                }
             });
         });
 
