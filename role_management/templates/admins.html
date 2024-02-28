@@ -28,7 +28,7 @@ Admin
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid" style="font-size: 15px;">
     <div class="alert alert-info" role="alert" id="info" hidden></div>
     <div class="alert alert-success" role="alert" id="admin-success" hidden>
     </div>
@@ -44,7 +44,7 @@ Admin
     <div class="row ">
         <h2 class="col-md-6 admincount"><span class="glyphicon glyphicon-user"></span> Admins ({{ admin_count }})
         </h2>
-        <div class="col-md-6" style="text-align: right;">
+        <div class="col-md-6" style="text-align: right; font-size: 15px;">
             <button type="button" class="btn btn-primary text-center add-btn" data-toggle="modal"
                 data-target="#exampleModal">
                 Add admin </button>
@@ -53,12 +53,17 @@ Admin
     </div>
     {% include 'modal_form.html' %}
     <br />
-    <form>
-        <div class="form-group">
-            <label>Search :</label>
-            <input class="form-control" id="myInput" type="text" placeholder="Search.." style="width: 266px;">
+    <div class="row">
+        <div class="col-md-12" style="text-align: right;">
+            <form class="form-inline">
+                <div class="form-group">
+                    <label for="myInput" class="mr-2">Search :</label>
+                    <input class="form-control" id="myInput" type="text" placeholder="Search.." style="width: 400px;">
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
+    <br />
     <table class="table table-bordered table-striped">
         <thead>
             <tr>
@@ -104,7 +109,7 @@ Admin
             </tr>
             {% endfor %}
             <tr id="noResultsMessage" style="display: none;">
-                <td colspan="12" class="text-center">No members found.</td>
+                <td colspan="12" class="text-center">No matching records found.</td>
             </tr>
         </tbody>
     </table>
@@ -130,6 +135,7 @@ Admin
             {% endif %}
         </ul>
     </nav>
+    
 </div>
 {% endblock %}
 
@@ -204,28 +210,19 @@ Admin
             e.preventDefault();
             if ($("#form").valid()) {
                 admin_id = $('#admin_id').val();
+                var data = {
+                    email: $('#email').val().trim(),
+                    first_name: $('#first_name').val().trim(),
+                    last_name: $('#last_name').val().trim(),
+                    username: $('#username').val().trim(),
+                    address: $('#address').val().trim(),
+                    gender: $('input[name="gender"]:checked').val(),
+                    csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+                };
+
                 if (!admin_id) {
-                    var data = {
-                        email: $('#email').val().trim(),
-                        first_name: $('#first_name').val().trim(),
-                        last_name: $('#last_name').val().trim(),
-                        username: $('#username').val().trim(),
-                        password: $('#password').val().trim(),
-                        confirm_password: $('#confirm_password').val().trim(),
-                        address: $('#address').val().trim(),
-                        gender: $('input[name="gender"]:checked').val(),
-                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-                    };
-                } else {
-                    var data = {
-                        email: $('#email').val().trim(),
-                        first_name: $('#first_name').val().trim(),
-                        last_name: $('#last_name').val().trim(),
-                        username: $('#username').val().trim(),
-                        address: $('#address').val().trim(),
-                        gender: $('input[name="gender"]:checked').val(),
-                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-                    }
+                    data.password = $('#password').val().trim();
+                    data.confirm_password = $('#confirm_password').val().trim();
                 }
 
                 $.ajax({
@@ -235,7 +232,7 @@ Admin
                     success: function (result) {
                         if (result.code == 200) {
                             let new_row = `
-                                <tr id="tabel-set" data-row-id="${result.data.admin_id}">
+                                                    <tr id="tabel-set" data-row-id="${result.data.admin_id}">
                                                         <td>${result.data.admin_id}</td>
                                                         <td>${result.data.username}</td>
                                                         <td>${result.data.email}</td>
@@ -243,7 +240,8 @@ Admin
                                                         <td>${result.data.last_name}</td>
                                                         <td>${result.data.address}</td>
                                                         <td>${result.data.gender}</td>
-                                                        <td>${result.data.created_at}</td>
+                                                        <td>${result.data.parent_username}</td>
+                                                        <td>${result.data.created_at}</td> 
                                                         <td>${result.data.updated_at}</td>                                                                             
                                                         <td>
                                                             <button class="btn btn-primary  edit-btn" id="edit-button" data-toggle="modal" data-target="#exampleModal"
@@ -268,6 +266,7 @@ Admin
                             $('#success').fadeToggle(3000);
                             $('#exampleModal').modal('hide');
                             $('.modal-backdrop').remove();
+
                         } else {
                             $('#error').text(result.message).show();
                             $('#error').fadeToggle(3000);
@@ -279,6 +278,45 @@ Admin
                     }
                 });
             }
+        });
+
+        function handleSearch() {
+            var value = $("#myInput").val().toLowerCase().trim();
+            $.ajax({
+                url: window.location.pathname + '?search=' + value,
+                success: function(data) {
+                    $('#myTable').html($(data).find('#myTable').html());
+                    $('.pagination').html($(data).find('.pagination').html());
+                    if ($("#myTable tr:visible").length === 0) {
+                        $("#noResultsMessage").show();
+                    } else {
+                        $("#noResultsMessage").hide();
+                    }
+                }
+            });
+        }
+
+
+        $("#myInput").on("keyup", function () {
+            handleSearch();
+        });
+
+
+        $('body').on('click', '.pagination a', function(event){
+            event.preventDefault();
+            let pageNumber = $(this).attr('href').split('page=')[1];
+            $.ajax({
+                url: window.location.pathname + '?page=' + pageNumber,
+                success: function(data) {
+                    $('#myTable').html($(data).find('#myTable').html());
+                    $('.pagination').html($(data).find('.pagination').html());
+                    if ($("#myTable tr:visible").length === 0) {
+                        $("#noResultsMessage").show();
+                    } else {
+                        $("#noResultsMessage").hide();
+                    }
+                }
+            });
         });
 
 
@@ -305,7 +343,7 @@ Admin
 
             $.ajax({
                 type: "GET",
-                url: `/admins/${admin_id}`,
+                url: `/admins/${admin_id}/`,
                 success: function (result) {
                     if (result.code == 200) {
                         $('#email').val(result.data.email);
@@ -354,7 +392,7 @@ Admin
                 if (result.isConfirmed) {
                     $.ajax({
                         type: 'DELETE',
-                        url: `/admins/${adminId}/`,
+                        url: `/admins/${adminId}`,
                         success: function (response) {
                             if (response.code === 200) {
                                 $(`#tabel-set[data-row-id="${adminId}"]`).remove();

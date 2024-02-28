@@ -57,6 +57,17 @@ Members
     {% include 'modal_form.html' %}
 
     <br />
+    <div class="row">
+        <div class="col-md-12" style="text-align: right;">
+            <form class="form-inline">
+                <div class="form-group">
+                    <label for="myInput" class="mr-2">Search :</label>
+                    <input class="form-control" id="myInput" type="text" placeholder="Search.." style="width: 400px;">
+                </div>
+            </form>
+        </div>
+    </div>
+    <br />
     <table class="table table-bordered table-striped">
         <thead>
             <tr>
@@ -73,7 +84,7 @@ Members
                 <th>Action</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="myTable">
             {% if members %}
             {% for member in members %}
             <tr id="tabel-set" data-row-id="{{ member.id }}">
@@ -102,12 +113,34 @@ Members
             {% else %}
             <div id="add-data"></div>
             <tr>
-                <td colspan="10" class="text-center" id="add-data-message">No members found.</td>
+                <td colspan="10" class="text-center" id="add-data-message">No matching records found.</td>
             </tr>
             {% endif %}
         </tbody>
     </table>
     {% endif %}
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-end">
+            {% if members.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ members.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+            {% for num in members.paginator.page_range %}
+            {% if members.number == num %}
+            <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% else %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+            {% if members.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ members.next_page_number }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+
 </div>
 {% endblock %}
 
@@ -202,19 +235,18 @@ Members
                     data: data,
                     success: function (result) {
                         if (result.code == 200) {
-                            const { member_id, username, email, first_name, last_name, address, gender, parent_username, created_at, updated_at } = result.data;
                             let new_row = `
                                                     <tr id="tabel-set" data-row-id="${result.data.member_id}">
-                                                        <td>${member_id}</td>
-                                                        <td>${username}</td>
-                                                        <td>${email}</td>
-                                                        <td>${first_name}</td>
-                                                        <td>${last_name}</td>
-                                                        <td>${address}</td>
-                                                        <td>${gender}</td>
-                                                        <td>${parent_username}</td>
-                                                        <td>${created_at}</td>
-                                                        <td>${updated_at}</td>                                       
+                                                        <td>${result.data.member_id}</td>
+                                                        <td>${result.data.username}</td>
+                                                        <td>${result.data.email}</td>
+                                                        <td>${result.data.first_name}</td>
+                                                        <td>${result.data.last_name}</td>
+                                                        <td>${result.data.address}</td>
+                                                        <td>${result.data.gender}</td>
+                                                        <td>${result.data.parent_username}</td>
+                                                        <td>${result.data.created_at}</td> 
+                                                        <td>${result.data.updated_at}</td>                                         
                                                         <td>
                                                             <button class="btn btn-primary  edit-btn" data-toggle="modal" data-target="#exampleModal"
                                                                 data-id="{{ member.id }}">
@@ -230,6 +262,7 @@ Members
                                 $(`#tabel-set[data-row-id="${member_id}"]`).replaceWith(new_row);
                             } else {
                                 $('table tbody').prepend(new_row);
+                                updateMemberCount();
                             }
                             $('#success').text(result.message).show();
                             $('#success').fadeToggle(3000);
@@ -247,6 +280,46 @@ Members
                     }
                 });
             }
+        });
+
+
+        function handleSearch() {
+            var value = $("#myInput").val().toLowerCase().trim();
+            $.ajax({
+                url: window.location.pathname + '?search=' + value,
+                success: function (data) {
+                    $('#myTable').html($(data).find('#myTable').html());
+                    $('.pagination').html($(data).find('.pagination').html());
+                    if ($("#myTable tr:visible").length === 0) {
+                        $("#noResultsMessage").show();
+                    } else {
+                        $("#noResultsMessage").hide();
+                    }
+                }
+            });
+        }
+
+
+        $("#myInput").on("keyup", function () {
+            handleSearch();
+        });
+
+
+        $('body').on('click', '.pagination a', function (event) {
+            event.preventDefault();
+            let pageNumber = $(this).attr('href').split('page=')[1];
+            $.ajax({
+                url: window.location.pathname + '?page=' + pageNumber,
+                success: function (data) {
+                    $('#myTable').html($(data).find('#myTable').html());
+                    $('.pagination').html($(data).find('.pagination').html());
+                    if ($("#myTable tr:visible").length === 0) {
+                        $("#noResultsMessage").show();
+                    } else {
+                        $("#noResultsMessage").hide();
+                    }
+                }
+            });
         });
 
 
@@ -287,51 +360,55 @@ Members
             });
         });
 
+
         $('body').on('click', '.delete-btn', function () {
             let memberId = $(this).data('id');
 
-            Swal.fire({
-                title: 'Are you sure?',
-                text: 'You will not be able to recover this admin!',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        type: 'DELETE',
-                        url: `/members/${memberId}/`,
-                        success: function (response) {
-                            if (response.code === 200) {
-                                $(`#tabel-set[data-row-id="${memberId}"]`).remove();
-                                Swal.fire(
-                                    'Deleted!',
-                                    'The admin has been deleted.',
-                                    'success'
-                                );
-                            } else {
+            if (memberId) {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'You will not be able to recover this member!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            type: 'DELETE',
+                            url: `/members/${memberId}/`,
+                            success: function (response) {
+                                if (response.code === 200) {
+                                    $(`#tabel-set[data-row-id="${memberId}"]`).remove();
+                                    Swal.fire(
+                                        'Deleted!',
+                                        'The member has been deleted.',
+                                        'success'
+                                    );
+                                } else {
+                                    Swal.fire(
+                                        'Error!',
+                                        response.message,
+                                        'error'
+                                    );
+                                }
+                            },
+                            error: function (error) {
                                 Swal.fire(
                                     'Error!',
-                                    response.message,
+                                    'An error occurred while processing your request. Please try again later.',
                                     'error'
                                 );
                             }
-                        },
-                        error: function (error) {
-                            Swal.fire(
-                                'Error!',
-                                'An error occurred while processing your request. Please try again later.',
-                                'error'
-                            );
-                        }
-                    });
-                }
-            });
+                        });
+                    }
+                });
+            } else {
+                console.error('Invalid member ID:', memberId);
+            }
         });
-
 
 
         function updateMemberCount() {

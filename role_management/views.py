@@ -13,24 +13,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework import serializers
-
-# class AdminSerializer(serializers.Serializer):
-#     admin_id = serializers.IntegerField()
-#     email = serializers.EmailField()
-#     first_name = serializers.CharField(max_length=100)
-#     last_name = serializers.CharField(max_length=100)
-#     username = serializers.CharField(max_length=100)
-#     address = serializers.CharField(max_length=255)
-#     gender = serializers.CharField(max_length=10)
-#     created_at = serializers.DateTimeField()
-#     updated_at = serializers.DateTimeField()
-
-#     def to_representation(self, instance):
-#         data = super().to_representation(instance)
-#         data['formatted_created_at'] = instance.formatted_created_at()
-#         data['formatted_updated_at'] = instance.formatted_updated_at()
-#         return data
-
+from django.db.models import Q
 
 
 def is_superuser(user):
@@ -63,7 +46,7 @@ def admin_username(members):
         else:
             member.parent_username = ""
 
-
+# View for adding an admin
 class AddAdminView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(admin_required)
@@ -128,7 +111,7 @@ class AddAdminView(View):
         except Exception as e:
             return sendResponse(400, f"Error: {str(e)}")
 
-
+# View for adding a member
 class AddMemberView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(member_required)
@@ -222,7 +205,7 @@ class AddMemberView(View):
         except Exception as e:
             return sendResponse(code=400, message=f"Error: {str(e)}")
     
-
+# View for listing admins
 class AdminView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(admin_required)
@@ -236,8 +219,18 @@ class AdminView(View):
                 parent_id=current_user.id, roles__role_name="ADMIN"
             ).order_by("-id")
 
-        admin_count = admins.count()
+        search_query = request.GET.get('search')
+        if search_query:
+            admins = admins.filter(
+                Q(username__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(address__icontains=search_query) |
+                Q(gender__icontains=search_query)
+            )
 
+        admin_count = admins.count()
 
         paginator = Paginator(admins, 9)
         page = request.GET.get('page')
@@ -261,7 +254,7 @@ class AdminView(View):
         except Exception as e:
             return sendResponse(code=400, message=f"Error: {str(e)}")
 
-
+# View for editing admin details
 class EditAdminView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(admin_required)
@@ -321,7 +314,7 @@ class EditAdminView(View):
         except Users.DoesNotExist:
             return sendResponse(404, "Admin not found")
 
-
+# View for editing members details
 class EditMemberView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(member_required)
@@ -390,7 +383,7 @@ class EditMemberView(View):
         except Users.DoesNotExist:
             return sendResponse(404, "Member not found")
 
-
+# View for listing members
 class MemberView(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(member_required)
@@ -404,7 +397,27 @@ class MemberView(View):
                 parent_id=current_user.id, roles__role_name="MEMBER"
             ).order_by("-id")
 
+        search_query = request.GET.get('search')
+        if search_query:
+            members = members.filter(
+                Q(username__icontains=search_query) |
+                Q(email__icontains=search_query) |
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(address__icontains=search_query) |
+                Q(gender__icontains=search_query)
+            )
         admin_username(members)
+
+        paginator = Paginator(members, 9)
+        page_number = request.GET.get('page')
+        try:
+            members = paginator.page(page_number)
+        except PageNotAnInteger:
+            members = paginator.page(1)
+        except EmptyPage:
+            members = paginator.page(paginator.num_pages)
+
 
         return render(
             request,
@@ -426,7 +439,7 @@ class MemberView(View):
         except Exception as e:
             return sendResponse(code=400, message=f"Error: {str(e)}")
     
-
+# View for admin members
 class AddAdminMembers(View):
     @method_decorator(login_required(login_url="login"))
     @method_decorator(member_required)
@@ -495,14 +508,25 @@ class AddAdminMembers(View):
 
         except Exception as e:
             return sendResponse(400, f"Error: {str(e)}")
+        
+    def delete(self, request, member_id):
+        print('============',member_id)
+        try:
+            member = Users.objects.get(id=member_id)
+            member.delete()
+            return sendResponse(code=200, message="member deleted successfully.")
+        except Users.DoesNotExist:
+            return sendResponse(code=404, message="member does not exist.")
+        except Exception as e:
+            return sendResponse(code=400, message=f"Error: {str(e)}")
 
-
+# View for handling user logout
 class LogoutView(View):
     def get(self, request):
         logout(request)
         return redirect("login")
 
-
+# View for handling user login
 class LoginView(View):
     def get(self, request):
         if request.user.is_authenticated:
@@ -540,8 +564,9 @@ class LoginView(View):
                 messages.error(request, "User not logged in successfully")
         else:
             messages.error(request, "Incorrect password.")
+            return redirect("login")
 
-
+# View for home page
 class HomeView(View):
     @method_decorator(login_required(login_url="login"))
     def get(self, request):
@@ -554,7 +579,7 @@ class HomeView(View):
             {"user_first_name": user_first_name , "user_member_role" : user_member_role},
         )
 
-
+# View for user registration
 class SignupView(View):
     def get(self, request):
         return render(request, "signup.html", {})
