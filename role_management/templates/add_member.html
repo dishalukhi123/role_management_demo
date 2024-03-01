@@ -243,6 +243,7 @@ Members
                             else {
                                 $('#add-data-message').hide();
                                 $('table tbody').prepend(new_row);
+                                updateMemberCount()
                             }
                             $('#success').text(result.message).show();
                             $('#success').fadeToggle(3000);
@@ -328,7 +329,7 @@ Members
                             if (response.code === 200) {
                                 $(`#tabel-set[data-row-id="${member_id}"]`).remove();
                                 let currentCount = parseInt($('.membercount').text().match(/\d+/)[0]); 
-                                $('.membercount').html(`<span class="glyphicon glyphicon-user"></span> Admins (${currentCount - 1})`);
+                                $('.membercount').html(`<span class="glyphicon glyphicon-user"></span> Members (${currentCount - 1})`);
                                 Swal.fire(
                                     'Deleted!',
                                     'The admin has been deleted.',
@@ -354,6 +355,13 @@ Members
                 }
             });
         });
+
+
+        function updateMemberCount() {
+            let currentCount = parseInt($('#member-count').text().match(/\d+/)[0]);
+            $('#member-count').html(`<span class="glyphicon glyphicon-user"></span>  Members (${currentCount + 1})`);
+
+        }
 
     });
 

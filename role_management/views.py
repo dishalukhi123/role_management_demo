@@ -40,10 +40,13 @@ def user_response(user):
 
 def admin_username(members):
     for member in members:
-        parent_user = Users.objects.filter(id=member.parent_id).first()
-        if parent_user:
-            member.parent_username = parent_user.username
-        else:
+        try:
+            parent_user = Users.objects.get(id=member.parent_id)
+            if parent_user:
+                member.parent_username = parent_user.username
+            else:
+                member.parent_username = ""
+        except Users.DoesNotExist:
             member.parent_username = ""
 
 # View for adding an admin
@@ -96,6 +99,7 @@ class AddAdminView(View):
                 code=200,
                 message="Admin added successfully.",
                 data={
+                    "success" :True,
                     "admin_id": user.id,
                     "created_at": user.formatted_created_at(),
                     "updated_at": user.formatted_updated_at(),
@@ -173,13 +177,8 @@ class AddMemberView(View):
                 200,
                 "Member added successfully.",
                 data={
+                    "success" :True,
                     "member_id": user.id,
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "username": user.username,
-                    "address": user.address,
-                    "gender": user.gender,
                     "parent_username": parent_username,
                     "created_at": user.formatted_created_at(),
                     "updated_at": user.formatted_updated_at(),
@@ -238,15 +237,28 @@ class AdminView(View):
         return render(request, "admins.html", {"admins": admins, "admin_count" : admin_count})
 
 
+    # def delete(self, request, admin_id):
+    #     try:
+    #         admin = Users.objects.get(id=admin_id)
+    #         admin.delete()
+    #         return sendResponse(code=200, message="Admin deleted successfully.")
+    #     except Users.DoesNotExist:
+    #         return sendResponse(code=404, message="Admin does not exist.")
+    #     except Exception as e:
+    #         return sendResponse(code=400, message=f"Error: {str(e)}")
+        
     def delete(self, request, admin_id):
         try:
             admin = Users.objects.get(id=admin_id)
+            admin_members = Users.objects.filter(parent_id=admin_id)
+            admin_members.delete()
             admin.delete()
-            return sendResponse(code=200, message="Admin deleted successfully.")
+            return sendResponse(code=200, message="Admin and associated members deleted successfully.")
         except Users.DoesNotExist:
             return sendResponse(code=404, message="Admin does not exist.")
         except Exception as e:
             return sendResponse(code=400, message=f"Error: {str(e)}")
+
 
 # View for editing admin details
 class EditAdminView(View):
@@ -476,13 +488,8 @@ class AddAdminMembers(View):
                 code=200,
                 message="member added successfully.",
                 data={
+                    "success" :True,
                     "member_id": user.id,
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "username": user.username,
-                    "address": user.address,
-                    "gender": user.gender,
                     "parent_username": parent_username,
                     "created_at": user.formatted_created_at(),
                     "updated_at": user.formatted_updated_at(),
@@ -532,8 +539,6 @@ class LoginView(View):
 
         print("User:", user)
         if user and check_password(password, user.password):
-            request.session["user_id"] = user.id
-            request.session["user_first_name"] = user.first_name
             auth_user = authenticate(request, username=user.username, password=password)
             if auth_user is not None:
                 login(request, auth_user)

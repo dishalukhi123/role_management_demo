@@ -43,8 +43,8 @@ Members
     </div>
 
     <div class="row ">
-        <h2 class="col-md-6 membercount"><span class="glyphicon glyphicon-user"></span> member ({{ member_count }})
-        </h2>
+        <h2 class="col-md-6 membercount"><span class="glyphicon glyphicon-user"></span> members (<span
+                id="member-count">{{ member_count }}</span>)</h2>
         <div class="col-md-6" style="text-align: right;">
             <button type="button" class="btn btn-primary text-center add-btn" data-toggle="modal"
                 data-target="#exampleModal">
@@ -236,7 +236,7 @@ Members
                     data: data,
                     success: function (result) {
                         if (result.code == 200) {
-                            const {username , email , first_name , last_name ,address ,gender} = data;
+                            const { username, email, first_name, last_name, address, gender } = data;
                             let new_row = `<tr id="tabel-set" data-row-id="${result.data.member_id}">
                                                         <td>${result.data.member_id}</td>
                                                         <td>${username}</td>
@@ -264,10 +264,13 @@ Members
                             } else {
                                 $('#add-data-message').hide();
                                 $('table tbody').prepend(new_row);
+                                updateMemberCount()
                             }
                             $('#success').text(result.message).show();
                             $('#success').fadeToggle(3000);
+                            console.log('Attempting to hide modal');
                             $('#exampleModal').modal('hide');
+                            console.log('Modal should be hidden');
                             $('.modal-backdrop').remove();
                         } else {
                             $('#error').text(result.message).show();
@@ -286,6 +289,7 @@ Members
 
         function handleSearch() {
             var value = $("#myInput").val().toLowerCase().trim();
+            console.log("=-=-=-=-=-=-=-=-=-=-=",value);
             $.ajax({
                 url: window.location.pathname + '?search=' + value,
                 success: function (data) {
@@ -300,7 +304,7 @@ Members
             });
         }
 
-        
+
         $("#myInput").on("keyup", function () {
             handleSearch();
         });
@@ -383,8 +387,8 @@ Members
                             success: function (response) {
                                 if (response.code === 200) {
                                     $(`#tabel-set[data-row-id="${memberId}"]`).remove();
-                                    let currentCount = parseInt($('.membercount').text().match(/\d+/)[0]); 
-                                    $('.membercount').html(`<span class="glyphicon glyphicon-user"></span> Admins (${currentCount - 1})`);
+                                    let currentCount = parseInt($('.membercount').text().match(/\d+/)[0]);
+                                    $('.membercount').html(`<span class="glyphicon glyphicon-user"></span> Members (${currentCount - 1})`);
                                     Swal.fire(
                                         'Deleted!',
                                         'The member has been deleted.',
@@ -413,6 +417,16 @@ Members
             }
         });
 
+
+        function updateMemberCount() {
+            let element = $('#member-count');
+            if (element.length > 0) {
+                let currentCount = parseInt(element.text().trim() || '0');
+                element.text(currentCount + 1);
+            } else {
+                console.error('#member-count element not found.');
+            }
+        }
 
     });
 

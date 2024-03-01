@@ -5,7 +5,7 @@
 <div class="container">
     <div class="alert alert-info" role="alert" id="info" hidden></div>
     <div class="row">
-        <h1><span class="glyphicon glyphicon-user"></span> Welcome {{ user_first_name }}</h1>
+        <h1><span class="glyphicon glyphicon-user"></span> Welcome {{ user.first_name }}</h1>
     </div>
 </div>
 {% endblock %}
@@ -13,7 +13,7 @@
 {% block js %}
 <script>
     $(document).ready(function () {
-        var userFirstName = "{{ user_first_name }}";
+        var userFirstName = "{{ user.first_name }}";
         $('#info').text('Welcome ' + userFirstName).show();
         $('#info').fadeToggle(3000);
     });
